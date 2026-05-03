@@ -38,4 +38,8 @@ top300GameState
 
 Use os botoes `Exportar` e `Importar` para transportar o progresso entre navegadores ou dispositivos.
 
+## Sincronizacao
+
+O HTML tem suporte a Supabase Realtime. Ao preencher `SYNC_CONFIG` em `top_300_br.html`, checks, idioma e observacoes passam a sincronizar entre PC e celular.
+
 Tutorial completo: [PUBLICAR_NO_GITHUB.md](PUBLICAR_NO_GITHUB.md)

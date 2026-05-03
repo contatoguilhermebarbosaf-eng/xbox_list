@@ -37,6 +37,7 @@
                         <span class="material-icons">upload</span>
                         <span>Importar</span>
                     </button>
+                    <span class="sync-status" id="sync-status" title="Estado da sincronização">Local</span>
                     <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importState(event)">
                 </div>
             </div>
@@ -45,6 +46,7 @@
 
     <div id="toast">Copiado para a área de transferência!</div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const gamesData = [
               {
@@ -1850,6 +1852,17 @@
             ];
 
         const STORAGE_KEY = 'top300GameState';
+        const SYNC_CONFIG = {
+            supabaseUrl: '',
+            supabaseAnonKey: '',
+            tableName: 'top300_state',
+            listId: 'default'
+        };
+
+        let syncClient = null;
+        let syncReady = false;
+        let applyingRemoteState = false;
+        const syncTimers = new Map();
 
         function readPersistedState() {
             try {
@@ -1870,6 +1883,49 @@
                 showToast('Não foi possível salvar o progresso neste navegador.');
                 return false;
             }
+        }
+
+        function isSyncConfigured() {
+            return !!(SYNC_CONFIG.supabaseUrl && SYNC_CONFIG.supabaseAnonKey);
+        }
+
+        function setSyncStatus(text, mode = 'local') {
+            const el = document.getElementById('sync-status');
+            if (!el) return;
+            el.textContent = text;
+            el.dataset.mode = mode;
+        }
+
+        function nowIso() {
+            return new Date().toISOString();
+        }
+
+        function getEntryTime(entry, fallback = '') {
+            const raw = entry?.updatedAt || fallback || '';
+            const parsed = Date.parse(raw);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function normalizeEntry(entry = {}, defaultObs = '') {
+            const obs = entry.obs !== undefined ? String(entry.obs) : defaultObs;
+            const checks = normalizeChecks(entry.checks || {}, obs);
+            return {
+                ...entry,
+                obs,
+                checks,
+                language: normalizeLanguage(entry.language),
+                listed: isAllChecked(checks),
+                updatedAt: entry.updatedAt || ''
+            };
+        }
+
+        function stampStateForSync(state) {
+            const stamp = nowIso();
+            Object.keys(state).forEach(gameId => {
+                state[gameId] = normalizeEntry(state[gameId]);
+                state[gameId].updatedAt = stamp;
+            });
+            return state;
         }
 
         const container = document.getElementById('game-list-container');
@@ -2025,7 +2081,7 @@
             return state;
         }
 
-        const stateData = migrateLegacyState(savedStates);
+        let stateData = migrateLegacyState(savedStates);
 
         function getChecks(gameId, defaultObs = '') {
             const checks = stateData[gameId]?.checks || {};
@@ -2176,13 +2232,17 @@
             if (!state[gameId]) state[gameId] = {};
             if (!state[gameId].checks) state[gameId].checks = {};
             state[gameId].checks[stepKey] = nowOn;
+            state[gameId] = normalizeEntry(state[gameId]);
+            state[gameId].updatedAt = nowIso();
             const checks = state[gameId].checks;
             const allDone = CHECK_STEPS.every(step => !!checks[step.key]);
             const progress = CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0) / CHECK_STEPS.length;
             state[gameId].listed = allDone;
+            stateData[gameId] = state[gameId];
             gameItem.classList.toggle('listed', allDone);
             gameItem.style.setProperty('--progress', progress);
             writePersistedState(state);
+            queueSyncGame(gameId);
             updateSummary();
         }
 
@@ -2194,24 +2254,28 @@
         }
 
         function saveText(gameId, text, textarea) {
-            updateState(gameId, 'obs', text);
             updateToggleAllButton();
-            if (text.trim() === '') return;
             const gameItem = textarea.closest('.game-item');
             const finalBtn = gameItem.querySelector(`.check-btn[onclick*="'${FINAL_CHECK_KEY}'"]`);
-            if (!finalBtn || !finalBtn.classList.contains('checked')) return;
-            finalBtn.classList.remove('checked');
-            finalBtn.querySelector('.material-icons').innerText = 'radio_button_unchecked';
-            gameItem.classList.remove('listed');
             let state = readPersistedState();
             if (!state[gameId]) state[gameId] = {};
             if (!state[gameId].checks) state[gameId].checks = {};
-            state[gameId].checks[FINAL_CHECK_KEY] = false;
-            state[gameId].listed = false;
+            state[gameId].obs = text;
+            if (text.trim() !== '' && finalBtn && finalBtn.classList.contains('checked')) {
+                finalBtn.classList.remove('checked');
+                finalBtn.querySelector('.material-icons').innerText = 'radio_button_unchecked';
+                gameItem.classList.remove('listed');
+                state[gameId].checks[FINAL_CHECK_KEY] = false;
+            }
+            state[gameId] = normalizeEntry(state[gameId]);
+            state[gameId].updatedAt = nowIso();
             const checks = state[gameId].checks;
             const progress = CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0) / CHECK_STEPS.length;
             gameItem.style.setProperty('--progress', progress);
+            gameItem.classList.toggle('listed', state[gameId].listed);
+            stateData[gameId] = state[gameId];
             writePersistedState(state);
+            queueSyncGame(gameId);
             updateSummary();
         }
 
@@ -2269,7 +2333,157 @@
             let state = readPersistedState();
             if (!state[gameId]) state[gameId] = {};
             state[gameId][key] = value;
+            state[gameId] = normalizeEntry(state[gameId]);
+            state[gameId].updatedAt = nowIso();
+            stateData[gameId] = state[gameId];
             writePersistedState(state);
+            queueSyncGame(gameId);
+        }
+
+        function queueSyncGame(gameId) {
+            if (applyingRemoteState || !syncReady || !syncClient) return;
+            clearTimeout(syncTimers.get(gameId));
+            syncTimers.set(gameId, setTimeout(() => {
+                syncTimers.delete(gameId);
+                syncGameToRemote(gameId);
+            }, 650));
+        }
+
+        async function syncGameToRemote(gameId) {
+            if (!syncReady || !syncClient) return;
+            const state = readPersistedState();
+            const data = normalizeEntry(state[gameId] || {});
+            if (!data.updatedAt) data.updatedAt = nowIso();
+            const { error } = await syncClient
+                .from(SYNC_CONFIG.tableName)
+                .upsert({
+                    list_id: SYNC_CONFIG.listId,
+                    game_id: gameId,
+                    data,
+                    updated_at: data.updatedAt
+                }, { onConflict: 'list_id,game_id' });
+            if (error) {
+                console.error('Falha ao sincronizar jogo:', error);
+                setSyncStatus('Sync pendente', 'warning');
+                return;
+            }
+            setSyncStatus('Sincronizado', 'online');
+        }
+
+        async function syncAllLocalState(remoteTimes = new Map()) {
+            if (!syncReady || !syncClient) return;
+            const state = readPersistedState();
+            const rows = Object.entries(state)
+                .map(([gameId, entry]) => {
+                    const data = normalizeEntry(entry);
+                    if (!data.updatedAt) data.updatedAt = nowIso();
+                    return { gameId, data };
+                })
+                .filter(({ gameId, data }) => getEntryTime(data) > (remoteTimes.get(gameId) || 0))
+                .map(({ gameId, data }) => ({
+                    list_id: SYNC_CONFIG.listId,
+                    game_id: gameId,
+                    data,
+                    updated_at: data.updatedAt
+                }));
+            if (rows.length === 0) return;
+            const { error } = await syncClient
+                .from(SYNC_CONFIG.tableName)
+                .upsert(rows, { onConflict: 'list_id,game_id' });
+            if (error) {
+                console.error('Falha ao enviar progresso local:', error);
+                setSyncStatus('Sync pendente', 'warning');
+            }
+        }
+
+        async function pullRemoteState() {
+            const { data, error } = await syncClient
+                .from(SYNC_CONFIG.tableName)
+                .select('game_id,data,updated_at')
+                .eq('list_id', SYNC_CONFIG.listId);
+            if (error) throw error;
+            const remoteTimes = new Map();
+            data.forEach(row => {
+                remoteTimes.set(row.game_id, getEntryTime(row.data, row.updated_at));
+                applyRemoteRow(row);
+            });
+            return remoteTimes;
+        }
+
+        function applyRemoteRow(row) {
+            const gameId = row.game_id;
+            const remoteEntry = normalizeEntry(row.data || {});
+            remoteEntry.updatedAt = remoteEntry.updatedAt || row.updated_at || nowIso();
+            const state = readPersistedState();
+            const localEntry = state[gameId] || {};
+            if (getEntryTime(remoteEntry, row.updated_at) < getEntryTime(localEntry)) return;
+            applyingRemoteState = true;
+            state[gameId] = remoteEntry;
+            stateData[gameId] = remoteEntry;
+            writePersistedState(state);
+            applyEntryToDom(gameId, remoteEntry);
+            applyingRemoteState = false;
+        }
+
+        function applyEntryToDom(gameId, entry) {
+            const gameItem = document.getElementById(gameId);
+            if (!gameItem) return;
+            const checks = normalizeChecks(entry.checks || {}, entry.obs || '');
+            CHECK_STEPS.forEach(step => {
+                const btn = gameItem.querySelector(`.check-btn[onclick*="'${step.key}'"]`);
+                if (!btn) return;
+                const on = !!checks[step.key];
+                btn.classList.toggle('checked', on);
+                const icon = btn.querySelector('.material-icons');
+                if (icon) icon.innerText = on ? 'check_circle' : 'radio_button_unchecked';
+            });
+            const select = gameItem.querySelector('.language-select');
+            if (select) {
+                select.value = normalizeLanguage(entry.language);
+                const wrapper = select.closest('.language-select-container');
+                if (wrapper) wrapper.classList.toggle('has-lang', select.value !== 'nao');
+            }
+            const textarea = gameItem.querySelector('textarea');
+            if (textarea && textarea.value !== (entry.obs || '')) textarea.value = entry.obs || '';
+            const progress = checkedCount(checks) / CHECK_STEPS.length;
+            gameItem.classList.toggle('listed', isAllChecked(checks));
+            gameItem.style.setProperty('--progress', progress);
+            updateSummary();
+            updateToggleAllButton();
+        }
+
+        async function initRealtimeSync() {
+            if (!isSyncConfigured()) {
+                setSyncStatus('Local', 'local');
+                return;
+            }
+            if (!window.supabase?.createClient) {
+                setSyncStatus('Sync indisponível', 'warning');
+                return;
+            }
+            try {
+                setSyncStatus('Conectando', 'warning');
+                syncClient = window.supabase.createClient(SYNC_CONFIG.supabaseUrl, SYNC_CONFIG.supabaseAnonKey);
+                syncReady = true;
+                const remoteTimes = await pullRemoteState();
+                await syncAllLocalState(remoteTimes);
+                syncClient
+                    .channel(`top300:${SYNC_CONFIG.listId}`)
+                    .on('postgres_changes', {
+                        event: '*',
+                        schema: 'public',
+                        table: SYNC_CONFIG.tableName,
+                        filter: `list_id=eq.${SYNC_CONFIG.listId}`
+                    }, payload => {
+                        if (payload.new) applyRemoteRow(payload.new);
+                    })
+                    .subscribe(status => {
+                        if (status === 'SUBSCRIBED') setSyncStatus('Tempo real', 'online');
+                    });
+            } catch (err) {
+                console.error('Falha ao iniciar sincronização:', err);
+                setSyncStatus('Sync pendente', 'warning');
+            }
         }
 
         function showToast(message) {
@@ -2309,7 +2523,7 @@
                         event.target.value = '';
                         return;
                     }
-                    writePersistedState(incoming);
+                    writePersistedState(stampStateForSync(incoming));
                     showToast("Progresso importado. Recarregando...");
                     setTimeout(() => location.reload(), 700);
                 } catch (err) {
@@ -2319,6 +2533,8 @@
             };
             reader.readAsText(file);
         }
+
+        initRealtimeSync();
     </script>
 </body>
 </html>

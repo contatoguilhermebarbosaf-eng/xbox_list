@@ -101,6 +101,67 @@ Isso significa:
 - em outro celular, PC ou navegador, o progresso nao aparece automaticamente;
 - para levar o progresso para outro lugar, use os botoes `Exportar` e `Importar` da propria pagina.
 
+## Sincronizacao em tempo real
+
+Para PC e celular enxergarem os mesmos checks e observacoes em tempo real, configure um projeto Supabase.
+
+No Supabase, abra `SQL Editor` e rode:
+
+```sql
+create table if not exists public.top300_state (
+  list_id text not null default 'default',
+  game_id text not null,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (list_id, game_id)
+);
+
+alter table public.top300_state enable row level security;
+
+drop policy if exists "top300_select" on public.top300_state;
+drop policy if exists "top300_insert" on public.top300_state;
+drop policy if exists "top300_update" on public.top300_state;
+
+create policy "top300_select"
+on public.top300_state
+for select
+using (true);
+
+create policy "top300_insert"
+on public.top300_state
+for insert
+with check (list_id = 'default');
+
+create policy "top300_update"
+on public.top300_state
+for update
+using (list_id = 'default')
+with check (list_id = 'default');
+
+alter table public.top300_state replica identity full;
+
+alter publication supabase_realtime add table public.top300_state;
+```
+
+Depois, no Supabase:
+
+1. Abra `Project Settings`.
+2. Abra `API`.
+3. Copie `Project URL`.
+4. Copie a chave `anon public`.
+5. No arquivo `top_300_br.html`, preencha:
+
+```js
+const SYNC_CONFIG = {
+    supabaseUrl: 'COLE_AQUI_PROJECT_URL',
+    supabaseAnonKey: 'COLE_AQUI_ANON_PUBLIC',
+    tableName: 'top300_state',
+    listId: 'default'
+};
+```
+
+Com isso, a pagina muda de `Local` para `Tempo real` e passa a sincronizar checks, idioma e observacoes entre dispositivos.
+
 ## Atualizar depois
 
 Quando mudar a lista ou o visual:
