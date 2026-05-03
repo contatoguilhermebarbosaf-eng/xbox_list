@@ -1862,6 +1862,7 @@
         let syncClient = null;
         let syncReady = false;
         let applyingRemoteState = false;
+        let syncPollInterval = null;
         const syncTimers = new Map();
 
         function readPersistedState() {
@@ -2410,6 +2411,24 @@
             return remoteTimes;
         }
 
+        async function pollRemoteState() {
+            if (!syncReady || !syncClient || applyingRemoteState) return;
+            try {
+                await pullRemoteState();
+                if (document.getElementById('sync-status')?.dataset.mode !== 'online') {
+                    setSyncStatus('Sync ativo', 'online');
+                }
+            } catch (err) {
+                console.error('Falha ao atualizar sincronização:', err);
+                setSyncStatus('Sync pendente', 'warning');
+            }
+        }
+
+        function startSyncPolling() {
+            if (syncPollInterval) return;
+            syncPollInterval = setInterval(pollRemoteState, 4000);
+        }
+
         function applyRemoteRow(row) {
             const gameId = row.game_id;
             const remoteEntry = normalizeEntry(row.data || {});
@@ -2467,6 +2486,8 @@
                 syncReady = true;
                 const remoteTimes = await pullRemoteState();
                 await syncAllLocalState(remoteTimes);
+                setSyncStatus('Sync ativo', 'online');
+                startSyncPolling();
                 syncClient
                     .channel(`top300:${SYNC_CONFIG.listId}`)
                     .on('postgres_changes', {
@@ -2479,6 +2500,9 @@
                     })
                     .subscribe(status => {
                         if (status === 'SUBSCRIBED') setSyncStatus('Tempo real', 'online');
+                        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                            setSyncStatus('Sync ativo', 'online');
+                        }
                     });
             } catch (err) {
                 console.error('Falha ao iniciar sincronização:', err);
