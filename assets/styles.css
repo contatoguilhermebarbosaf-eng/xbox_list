@@ -1,0 +1,747 @@
+/* === Organizador de Jogos — shared theme === */
+
+:root {
+    /* Warm neutrals */
+    --bg-0: oklch(0.16 0.012 60);
+    --bg-1: oklch(0.20 0.014 60);
+    --bg-2: oklch(0.24 0.014 60);
+    --bg-3: oklch(0.28 0.014 60);
+    --line: oklch(0.32 0.014 60);
+    --line-strong: oklch(0.42 0.018 60);
+
+    --ink-0: oklch(0.96 0.012 80);
+    --ink-1: oklch(0.78 0.012 80);
+    --ink-2: oklch(0.58 0.012 80);
+    --ink-3: oklch(0.44 0.012 80);
+
+    /* Accents — same chroma, varied hue */
+    --accent: oklch(0.78 0.14 65);          /* warm amber */
+    --accent-soft: oklch(0.78 0.14 65 / 0.16);
+    --accent-line: oklch(0.78 0.14 65 / 0.40);
+    --success: oklch(0.78 0.14 155);        /* green */
+    --success-soft: oklch(0.78 0.14 155 / 0.16);
+    --info: oklch(0.78 0.14 240);           /* blue */
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --shadow-1: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 1px 2px oklch(0 0 0 / 0.30);
+    --shadow-2: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 8px 24px -12px oklch(0 0 0 / 0.55);
+
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    min-height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: var(--font-sans);
+    background:
+        radial-gradient(1200px 600px at 50% -10%, oklch(0.78 0.14 65 / 0.06), transparent 60%),
+        radial-gradient(900px 500px at 90% 110%, oklch(0.78 0.14 240 / 0.04), transparent 60%),
+        var(--bg-0);
+    color: var(--ink-0);
+    margin: 0;
+    padding: 0 24px 60px;
+    display: flex;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    touch-action: manipulation;
+}
+
+.container {
+    width: 100%;
+    max-width: 1040px;
+    min-width: 0;
+}
+
+/* ─── Sticky header / dashboard ─── */
+.sticky-dashboard {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: 28px 0 16px;
+    margin-bottom: 22px;
+    background:
+        linear-gradient(180deg,
+            var(--bg-0) 0%,
+            color-mix(in oklch, var(--bg-0) 92%, transparent) 70%,
+            transparent 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink-0);
+}
+
+h1 .h1-accent {
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.progress-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-1);
+}
+
+.progress-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg-2);
+    border-radius: 999px;
+    overflow: hidden;
+    min-width: 120px;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), oklch(0.82 0.14 110));
+    transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: stretch;
+    margin-top: 18px;
+    min-width: 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+    min-width: 0;
+}
+
+.stat-card {
+    position: relative;
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    min-width: 0;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.stat-card:hover {
+    border-color: var(--line-strong);
+}
+
+.stat-card.is-primary {
+    background: linear-gradient(180deg, var(--accent-soft), transparent 80%), var(--bg-1);
+    border-color: var(--accent-line);
+}
+
+.stat-card.is-success {
+    background: linear-gradient(180deg, var(--success-soft), transparent 80%), var(--bg-1);
+    border-color: oklch(0.78 0.14 155 / 0.40);
+}
+
+.stat-value {
+    display: block;
+    font-family: var(--font-mono);
+    color: var(--ink-0);
+    font-size: 1.30rem;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+.stat-card.is-primary .stat-value { color: var(--accent); }
+.stat-card.is-success .stat-value { color: var(--success); }
+
+.stat-label {
+    display: block;
+    color: var(--ink-2);
+    font-size: 0.7rem;
+    font-weight: 500;
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ─── Toolbar actions group ─── */
+.toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: stretch;
+}
+
+/* ─── Toolbar button ─── */
+.toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 100%;
+    min-width: 152px;
+    padding: 10px 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg-1);
+    color: var(--ink-1);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.toolbar-btn:hover {
+    background: var(--bg-2);
+    border-color: var(--line-strong);
+    color: var(--ink-0);
+}
+
+.toolbar-btn .material-icons {
+    font-size: 18px;
+}
+
+button,
+select,
+textarea {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Game item card ─── */
+.game-item {
+    position: relative;
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.game-item:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-2);
+}
+
+/* Progress hairline at the bottom of each card */
+.game-item::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 2px;
+    background: var(--accent);
+    transform-origin: left;
+    transform: scaleX(var(--progress, 0));
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    opacity: 0.85;
+}
+
+.game-item.listed::after {
+    background: var(--success);
+    transform: scaleX(1);
+}
+
+.game-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    min-width: 0;
+}
+
+.game-header:hover { background-color: var(--bg-2); }
+
+.game-title-container {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+}
+
+/* ─── Checks group ─── */
+.checks-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* Action button base */
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--ink-2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 999px;
+    transition: color 0.18s, background 0.18s, border-color 0.18s;
+    font-family: inherit;
+}
+
+.action-btn:hover {
+    color: var(--ink-0);
+    background: var(--bg-3);
+}
+
+/* Check chip — replaces Material radio_button look */
+.check-btn {
+    flex-direction: column;
+    width: 64px;
+    height: 52px;
+    padding: 6px 4px;
+    border-radius: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+
+.check-btn:hover {
+    background: var(--bg-3);
+    border-color: var(--line-strong);
+    color: var(--ink-1);
+}
+
+.check-btn .material-icons {
+    font-size: 20px;
+}
+
+.check-btn.checked {
+    background: linear-gradient(180deg, var(--accent-soft), transparent), var(--bg-2);
+    border-color: var(--accent-line);
+    color: var(--accent);
+}
+
+.check-btn .check-label {
+    display: block;
+    width: 100%;
+    margin-top: 2px;
+    font-size: 0.56rem;
+    line-height: 1.05;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+    pointer-events: none;
+    transition: color 0.18s;
+}
+
+.check-btn:hover .check-label { color: var(--ink-2); }
+.check-btn.checked .check-label { color: var(--accent); }
+
+/* ─── Language select ─── */
+.language-select-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 92px;
+    height: 52px;
+    min-width: 0;
+    padding: 5px 4px;
+    border-radius: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    transition: border-color 0.18s, background 0.18s;
+}
+
+.language-select-container:hover {
+    border-color: var(--line-strong);
+    background: var(--bg-3);
+}
+
+.language-label {
+    display: block;
+    width: 100%;
+    margin-bottom: 3px;
+    font-size: 0.54rem;
+    line-height: 1.05;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+    pointer-events: none;
+}
+
+.language-select {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg-1);
+    color: var(--ink-1);
+    font: inherit;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 3px 4px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: center;
+}
+
+.language-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+/* When a real language is picked, signal it */
+.language-select-container.has-lang {
+    background: linear-gradient(180deg, var(--accent-soft), transparent), var(--bg-2);
+    border-color: var(--accent-line);
+}
+.language-select-container.has-lang .language-label { color: var(--accent); }
+.language-select-container.has-lang .language-select { color: var(--accent); border-color: var(--accent-line); }
+
+.copy-btn { justify-self: end; }
+
+/* ─── Game name + meta ─── */
+.game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.game-name {
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink-0);
+    transition: color 0.2s, text-decoration 0.2s;
+    user-select: none;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    letter-spacing: -0.005em;
+}
+
+.title-id {
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 400;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    user-select: text;
+    letter-spacing: 0.02em;
+}
+
+.title-id .title-id-key {
+    color: var(--ink-3);
+    margin-right: 4px;
+}
+
+/* Listed (all 5 checks done) */
+.game-item.listed {
+    background: linear-gradient(180deg, var(--success-soft), transparent 30%), var(--bg-1);
+    border-color: oklch(0.78 0.14 155 / 0.30);
+}
+
+.game-item.listed .game-name {
+    text-decoration: line-through;
+    text-decoration-color: var(--ink-3);
+    color: var(--ink-3);
+}
+
+/* ─── Observations ─── */
+.observations {
+    display: none;
+    padding: 0 18px 18px 18px;
+    border-top: 1px solid var(--line);
+    background: var(--bg-0);
+}
+
+.observations.expanded {
+    display: block;
+    animation: fadeIn 0.25s ease;
+}
+
+textarea {
+    width: 100%;
+    min-height: 110px;
+    background: var(--bg-1);
+    color: var(--ink-0);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    resize: vertical;
+    box-sizing: border-box;
+    margin-top: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea::placeholder { color: var(--ink-3); }
+
+textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ─── Toast ─── */
+#toast {
+    visibility: hidden;
+    min-width: 260px;
+    max-width: 90vw;
+    background: var(--bg-3);
+    color: var(--ink-0);
+    border: 1px solid var(--line-strong);
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 14px 20px;
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-2);
+}
+
+#toast::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    margin-right: 10px;
+    vertical-align: middle;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+#toast.show {
+    visibility: visible;
+    animation: toastFadeIn 0.3s, toastFadeOut 0.3s 2.7s;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-2px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastFadeIn {
+    from { bottom: 0;  opacity: 0; }
+    to   { bottom: 30px; opacity: 1; }
+}
+@keyframes toastFadeOut {
+    from { bottom: 30px; opacity: 1; }
+    to   { bottom: 0;    opacity: 0; }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 880px) {
+    body { padding: 0 14px 30px; }
+
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .toolbar-actions { width: 100%; }
+
+    .toolbar-btn { flex: 1 1 150px; min-height: 46px; }
+
+    .game-title-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .checks-group { flex-wrap: wrap; }
+}
+
+@media (max-width: 580px) {
+    body { padding: 0 8px 24px; display: block; width: 100%; overflow-x: hidden; }
+    .container { max-width: 100%; }
+
+    h1 { font-size: 1.4rem; line-height: 1.15; }
+    .title-row { gap: 10px; align-items: flex-start; }
+    .eyebrow { font-size: 0.65rem; }
+
+    .sticky-dashboard {
+        padding: 12px 0 10px;
+        margin-bottom: 10px;
+        max-height: 72vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .dashboard { gap: 8px; margin-top: 14px; }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .stat-card {
+        padding: 8px 9px;
+    }
+
+    .stat-value {
+        font-size: 1.05rem;
+    }
+
+    .stat-label {
+        font-size: 0.62rem;
+        white-space: normal;
+        line-height: 1.15;
+        min-height: 1.4em;
+    }
+
+    .toolbar-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .toolbar-btn {
+        min-width: 0;
+        width: 100%;
+        min-height: 44px;
+        padding: 8px 6px;
+        gap: 4px;
+        font-size: 0.72rem;
+    }
+
+    .toolbar-btn .material-icons {
+        font-size: 17px;
+    }
+
+    .progress-meta {
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .progress-track {
+        min-width: 0;
+    }
+
+    .game-header {
+        position: relative;
+        grid-template-columns: 1fr;
+        padding: 14px 12px;
+    }
+
+    .checks-group {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+        width: 100%;
+        order: 2;
+    }
+
+    .language-select-container,
+    .check-btn {
+        width: 100%;
+        min-width: 0;
+        height: 48px;
+        padding: 4px 2px;
+        border-radius: 8px;
+    }
+
+    .language-label,
+    .check-btn .check-label { font-size: 0.5rem; }
+
+    .check-btn .material-icons { font-size: 20px; }
+
+    .copy-btn {
+        position: absolute;
+        right: 10px;
+        bottom: 12px;
+        width: 42px;
+        height: 42px;
+        background: var(--bg-2);
+        border: 1px solid var(--line);
+    }
+
+    .game-name { padding-right: 44px; font-size: 1rem; }
+    .title-id { padding-right: 44px; font-size: 0.7rem; }
+
+    textarea {
+        min-height: 130px;
+        font-size: 1rem;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 380px) {
+    .stats-grid,
+    .toolbar-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .checks-group {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .language-select-container,
+    .check-btn {
+        height: 46px;
+    }
+}
+
+/* Small util */
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
