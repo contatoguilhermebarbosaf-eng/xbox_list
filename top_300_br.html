@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 300 BR — Organizador de Jogos</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+    <div class="container" id="game-list-container">
+        <div class="sticky-dashboard">
+            <div class="title-row">
+                <div>
+                    <div class="eyebrow">Ranking BR · Xbox 360 · Top 300</div>
+                    <h1>Top 300 <span class="h1-accent">Brasil</span></h1>
+                </div>
+                <div class="progress-meta" aria-hidden="true">
+                    <span id="progress-text">0 / 0</span>
+                    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+                </div>
+            </div>
+            <div class="dashboard">
+                <div class="stats-grid" id="stats-summary" aria-live="polite"></div>
+                <div class="toolbar-actions">
+                    <button class="action-btn toolbar-btn" id="toggle-all-observations" onclick="toggleAllObservations(event)" title="Mostrar todas as observações">
+                        <span class="material-icons">unfold_more</span>
+                        <span>Mostrar obs</span>
+                    </button>
+                    <button class="action-btn toolbar-btn" onclick="exportState(event)" title="Exportar progresso (JSON)">
+                        <span class="material-icons">download</span>
+                        <span>Exportar</span>
+                    </button>
+                    <button class="action-btn toolbar-btn" onclick="document.getElementById('import-file').click()" title="Importar progresso (JSON)">
+                        <span class="material-icons">upload</span>
+                        <span>Importar</span>
+                    </button>
+                    <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importState(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Copiado para a área de transferência!</div>
+
+    <script>
+        const gamesData = [
+              {
+                "rank": 1,
+                "name": "Grand Theft Auto V",
+                "titleId": "545408A7",
+                "obs": ""
+              },
+              {
+                "rank": 2,
+                "name": "Minecraft: Xbox 360 Edition",
+                "titleId": "584111F7",
+                "obs": ""
+              },
+              {
+                "rank": 3,
+                "name": "Call of Duty: Black Ops II",
+                "titleId": "415608C3",
+                "obs": ""
+              },
+              {
+                "rank": 4,
+                "name": "Red Dead Redemption",
+                "titleId": "5454082B",
+                "obs": ""
+              },
+              {
+                "rank": 5,
+                "name": "Mortal Kombat Komplete Edition",
+                "titleId": "575207FD",
+                "obs": ""
+              },
+              {
+                "rank": 6,
+                "name": "Need for Speed: Most Wanted (2005)",
+                "titleId": "454107D9",
+                "obs": ""
+              },
+              {
+                "rank": 7,
+                "name": "Forza Horizon",
+                "titleId": "4D5309C9",
+                "obs": ""
+              },
+              {
+                "rank": 8,
+                "name": "Naruto Shippuden: Ultimate Ninja Storm 3",
+                "titleId": "4E4D085C",
+                "obs": ""
+              },
+              {
+                "rank": 9,
+                "name": "Call of Duty: Modern Warfare 3",
+                "titleId": "415608CB",
+                "obs": ""
+              },
+              {
+                "rank": 10,
+                "name": "Grand Theft Auto IV",
+                "titleId": "545407F2",
+                "obs": ""
+              },
+              {
+                "rank": 11,
+                "name": "Far Cry 3",
+                "titleId": "5553088C",
+                "obs": ""
+              },
+              {
+                "rank": 12,
+                "name": "Left 4 Dead 2",
+                "titleId": "454108D4",
+                "obs": ""
+              },
+              {
+                "rank": 13,
+                "name": "Resident Evil 6",
+                "titleId": "43430819",
+                "obs": ""
+              },
+              {
+                "rank": 14,
+                "name": "Assassin's Creed IV: Black Flag",
+                "titleId": "555308C2",
+                "obs": ""
+              },
+              {
+                "rank": 15,
+                "name": "Batman: Arkham City",
+                "titleId": "57520802",
+                "obs": ""
+              },
+              {
+                "rank": 16,
+                "name": "Dragon Ball Xenoverse",
+                "titleId": "4E4D0862",
+                "obs": ""
+              },
+              {
+                "rank": 17,
+                "name": "Gears of War 3",
+                "titleId": "4D5308AB",
+                "obs": ""
+              },
+              {
+                "rank": 18,
+                "name": "Halo: Reach",
+                "titleId": "4D53085B",
+                "obs": ""
+              },
+              {
+                "rank": 19,
+                "name": "Diablo III",
+                "titleId": "394F07D1",
+                "obs": ""
+              },
+              {
+                "rank": 20,
+                "name": "Need for Speed: Hot Pursuit",
+                "titleId": "45410903",
+                "obs": ""
+              },
+              {
+                "rank": 21,
+                "name": "Assassin's Creed II",
+                "titleId": "5553083B",
+                "obs": ""
+              },
+              {
+                "rank": 22,
+                "name": "Naruto Shippuden: Ultimate Ninja Storm Revolution",
+                "titleId": "4E4D0868",
+                "obs": ""
+              },
+              {
+                "rank": 23,
+                "name": "Resident Evil 5",
+                "titleId": "434307D4",
+                "obs": ""
+              },
+              {
+                "rank": 24,
+                "name": "Call of Duty: Black Ops",
+                "titleId": "41560855",
+                "obs": ""
+              },
+              {
+                "rank": 25,
+                "name": "The Elder Scrolls V: Skyrim",
+                "titleId": "425307D6",
+                "obs": ""
+              },
+              {
+                "rank": 26,
+                "name": "Battlefield 4",
+                "titleId": "454109BA",
+                "obs": ""
+              },
+              {
+                "rank": 27,
+                "name": "Need for Speed Carbon",
+                "titleId": "454107EC",
+                "obs": ""
+              },
+              {
+                "rank": 28,
+                "name": "Mortal Kombat vs. DC Universe",
+                "titleId": "4D5707E9",
+                "obs": ""
+              },
+              {
+                "rank": 29,
+                "name": "WWE 2K14",
+                "titleId": "545408B2",
+                "obs": ""
+              },
+              {
+                "rank": 30,
+                "name": "UFC Undisputed 3",
+                "titleId": "5451087D",
+                "obs": ""
+              },
+              {
+                "rank": 31,
+                "name": "Grand Theft Auto: San Andreas",
+                "titleId": "545408B8",
+                "obs": ""
+              },
+              {
+                "rank": 32,
+                "name": "Borderlands 2",
+                "titleId": "545407F7",
+                "obs": ""
+              },
+              {
+                "rank": 33,
+                "name": "Batman: Arkham Origins",
+                "titleId": "575208DA",
+                "obs": ""
+              },
+              {
+                "rank": 34,
+                "name": "Assassin's Creed Brotherhood",
+                "titleId": "5553085D",
+                "obs": ""
+              },
+              {
+                "rank": 35,
+                "name": "Far Cry 4",
+                "titleId": "555308CA",
+                "obs": ""
+              },
+              {
+                "rank": 36,
+                "name": "Forza Horizon 2",
+                "titleId": "4D530AA4",
+                "obs": ""
+              },
+              {
+                "rank": 37,
+                "name": "Need for Speed: Rivals",
+                "titleId": "454109C6",
+                "obs": ""
+              },
+              {
+                "rank": 38,
+                "name": "Tomb Raider",
+                "titleId": "53510802",
+                "obs": ""
+              },
+              {
+                "rank": 39,
+                "name": "Resident Evil 4",
+                "titleId": "4343081C",
+                "obs": ""
+              },
+              {
+                "rank": 40,
+                "name": "Injustice: Gods Among Us",
+                "titleId": "57520829",
+                "obs": ""
+              },
+              {
+                "rank": 41,
+                "name": "Left 4 Dead",
+                "titleId": "45410830",
+                "obs": ""
+              },
+              {
+                "rank": 42,
+                "name": "Skate 3",
+                "titleId": "454108E6",
+                "obs": ""
+              },
+              {
+                "rank": 43,
+                "name": "Naruto Shippuden: Ultimate Ninja Storm 2",
+                "titleId": "4E4D0819",
+                "obs": ""
+              },
+              {
+                "rank": 44,
+                "name": "Call of Duty: Modern Warfare 2",
+                "titleId": "41560817",
+                "obs": ""
+              },
+              {
+                "rank": 45,
+                "name": "Red Dead Redemption: Undead Nightmare",
+                "titleId": "5841085C",
+                "obs": ""
+              },
+              {
+                "rank": 46,
+                "name": "Dragon Ball Z: Budokai HD Collection",
+                "titleId": "4E4D0856",
+                "obs": ""
+              },
+              {
+                "rank": 47,
+                "name": "Halo 4",
+                "titleId": "4D530919",
+                "obs": ""
+              },
+              {
+                "rank": 48,
+                "name": "Gears of War 2",
+                "titleId": "4D53082D",
+                "obs": ""
+              },
+              {
+                "rank": 49,
+                "name": "Call of Duty 4: Modern Warfare",
+                "titleId": "415607E6",
+                "obs": ""
+              },
+              {
+                "rank": 50,
+                "name": "Need for Speed: ProStreet",
+                "titleId": "45410822",
+                "obs": ""
+              },
+              {
+                "rank": 51,
+                "name": "Assassin's Creed Revelations",
+                "titleId": "55530879",
+                "obs": ""
+              },
+              {
+                "rank": 52,
+                "name": "Batman: Arkham Asylum",
+                "titleId": "534307F6",
+                "obs": ""
+              },
+              {
+                "rank": 53,
+                "name": "Call of Duty: Ghosts",
+                "titleId": "415608FC",
+                "obs": ""
+              },
+              {
+                "rank": 54,
+                "name": "Sonic & All-Stars Racing Transformed",
+                "titleId": "5345085D",
+                "obs": ""
+              },
+              {
+                "rank": 55,
+                "name": "Street Fighter IV",
+                "titleId": "434307E1",
+                "obs": ""
+              },
+              {
+                "rank": 56,
+                "name": "Resident Evil Revelations",
+                "titleId": "43430833",
+                "obs": ""
+              },
+              {
+                "rank": 57,
+                "name": "Dragon Ball Z: Raging Blast 2",
+                "titleId": "4E4D0826",
+                "obs": ""
+              },
+              {
+                "rank": 58,
+                "name": "LEGO Marvel Super Heroes",
+                "titleId": "57520835",
+                "obs": ""
+              },
+              {
+                "rank": 59,
+                "name": "Assassin's Creed III",
+                "titleId": "5553088B",
+                "obs": ""
+              },
+              {
+                "rank": 60,
+                "name": "Need for Speed: The Run",
+                "titleId": "4541094A",
+                "obs": ""
+              },
+              {
+                "rank": 61,
+                "name": "Forza Motorsport 4",
+                "titleId": "4D530914",
+                "obs": ""
+              },
+              {
+                "rank": 62,
+                "name": "Mass Effect 2",
+                "titleId": "454108CE",
+                "obs": ""
+              },
+              {
+                "rank": 63,
+                "name": "Battlefield 3",
+                "titleId": "45410894",
+                "obs": ""
+              },
+              {
+                "rank": 64,
+                "name": "Saints Row: The Third",
+                "titleId": "5451086D",
+                "obs": ""
+              },
+              {
+                "rank": 65,
+                "name": "Max Payne 3",
+                "titleId": "5454088C",
+                "obs": ""
+              },
+              {
+                "rank": 66,
+                "name": "Naruto Shippuden: Ultimate Ninja Storm Generations",
+                "titleId": "4E4D0842",
+                "obs": ""
+              },
+              {
+                "rank": 67,
+                "name": "Dragon Ball Z: Burst Limit",
+                "titleId": "424107DC",
+                "obs": ""
+              },
+              {
+                "rank": 68,
+                "name": "WWE 2K17",
+                "titleId": "545408BA",
+                "obs": ""
+              },
+              {
+                "rank": 69,
+                "name": "Street Fighter X Tekken",
+                "titleId": "4343080F",
+                "obs": ""
+              },
+              {
+                "rank": 70,
+                "name": "BioShock Infinite",
+                "titleId": "5454085D",
+                "obs": ""
+              },
+              {
+                "rank": 71,
+                "name": "Sleeping Dogs",
+                "titleId": "53510811",
+                "obs": ""
+              },
+              {
+                "rank": 72,
+                "name": "Tom Clancy's Ghost Recon: Future Soldier",
+                "titleId": "55530833",
+                "obs": ""
+              },
+              {
+                "rank": 73,
+                "name": "Tekken Tag Tournament 2",
+                "titleId": "4E4D0859",
+                "obs": ""
+              },
+              {
+                "rank": 74,
+                "name": "Need for Speed: Undercover",
+                "titleId": "45410876",
+                "obs": ""
+              },
+              {
+                "rank": 75,
+                "name": "Mafia II",
+                "titleId": "545407E6",
+                "obs": ""
+              },
+              {
+                "rank": 76,
+                "name": "Gears of War",
+                "titleId": "4D5307D5",
+                "obs": ""
+              },
+              {
+                "rank": 77,
+                "name": "Halo 3",
+                "titleId": "4D5307E6",
+                "obs": ""
+              },
+              {
+                "rank": 78,
+                "name": "Assassin's Creed Rogue",
+                "titleId": "555308CE",
+                "obs": ""
+              },
+              {
+                "rank": 79,
+                "name": "Dead Rising 2",
+                "titleId": "43430809",
+                "obs": ""
+              },
+              {
+                "rank": 80,
+                "name": "Dead Island",
+                "titleId": "4B4D07DF",
+                "obs": ""
+              },
+              {
+                "rank": 81,
+                "name": "LEGO Batman 2: DC Super Heroes",
+                "titleId": "57520817",
+                "obs": ""
+              },
+              {
+                "rank": 82,
+                "name": "Portal 2",
+                "titleId": "45410912",
+                "obs": ""
+              },
+              {
+                "rank": 83,
+                "name": "Metal Gear Rising: Revengeance",
+                "titleId": "4B4E080A",
+                "obs": ""
+              },
+              {
+                "rank": 84,
+                "name": "Need for Speed: Shift",
+                "titleId": "454108B4",
+                "obs": ""
+              },
+              {
+                "rank": 85,
+                "name": "The Elder Scrolls IV: Oblivion",
+                "titleId": "425307D3",
+                "obs": ""
+              },
+              {
+                "rank": 86,
+                "name": "Dead Space 2",
+                "titleId": "45410866",
+                "obs": ""
+              },
+              {
+                "rank": 87,
+                "name": "Dragon Ball Z: Ultimate Tenkaichi",
+                "titleId": "4E4D0846",
+                "obs": ""
+              },
+              {
+                "rank": 88,
+                "name": "DmC: Devil May Cry",
+                "titleId": "43430824",
+                "obs": ""
+              },
+              {
+                "rank": 89,
+                "name": "Call of Duty: World at War",
+                "titleId": "4156081C",
+                "obs": ""
+              },
+              {
+                "rank": 90,
+                "name": "Fight Night Champion",
+                "titleId": "45410915",
+                "obs": ""
+              },
+              {
+                "rank": 91,
+                "name": "WWE '13",
+                "titleId": "545108B4",
+                "obs": ""
+              },
+              {
+                "rank": 92,
+                "name": "BioShock",
+                "titleId": "545407D8",
+                "obs": ""
+              },
+              {
+                "rank": 93,
+                "name": "State of Decay",
+                "titleId": "584111E8",
+                "obs": ""
+              },
+              {
+                "rank": 94,
+                "name": "Far Cry 2",
+                "titleId": "55530810",
+                "obs": ""
+              },
+              {
+                "rank": 95,
+                "name": "Sonic Generations",
+                "titleId": "53450848",
+                "obs": ""
+              },
+              {
+                "rank": 96,
+                "name": "Assassin's Creed",
+                "titleId": "555307D4",
+                "obs": ""
+              },
+              {
+                "rank": 97,
+                "name": "WWE All Stars",
+                "titleId": "54510866",
+                "obs": ""
+              },
+              {
+                "rank": 98,
+                "name": "Tekken 6",
+                "titleId": "4E4D07FC",
+                "obs": ""
+              },
+              {
+                "rank": 99,
+                "name": "Army of Two: The 40th Day",
+                "titleId": "454108D8",
+                "obs": ""
+              },
+              {
+                "rank": 100,
+                "name": "LEGO Batman 3: Beyond Gotham",
+                "titleId": "57520845",
+                "obs": ""
+              },
+              {
+                "rank": 101,
+                "name": "Plants vs. Zombies: Garden Warfare",
+                "titleId": "454109C9",
+                "obs": ""
+              },
+              {
+                "rank": 102,
+                "name": "Sniper Elite V2",
+                "titleId": "464F07E8",
+                "obs": ""
+              },
+              {
+                "rank": 103,
+                "name": "Call of Duty: Advanced Warfare",
+                "titleId": "41560914",
+                "obs": ""
+              },
+              {
+                "rank": 104,
+                "name": "Far Cry 3: Blood Dragon",
+                "titleId": "584113BF",
+                "obs": ""
+              },
+              {
+                "rank": 105,
+                "name": "Need for Speed: Shift 2 Unleashed",
+                "titleId": "45410934",
+                "obs": ""
+              },
+              {
+                "rank": 106,
+                "name": "Fable II",
+                "titleId": "4D5307F1",
+                "obs": ""
+              },
+              {
+                "rank": 107,
+                "name": "Diablo III: Reaper of Souls - Ultimate Evil Edition",
+                "titleId": "394F07D1",
+                "obs": ""
+              },
+              {
+                "rank": 108,
+                "name": "The Walking Dead: Season One",
+                "titleId": "584111DE",
+                "obs": ""
+              },
+              {
+                "rank": 109,
+                "name": "Saints Row IV",
+                "titleId": "4B4D07F6",
+                "obs": ""
+              },
+              {
+                "rank": 110,
+                "name": "Mortal Kombat Arcade Kollection",
+                "titleId": "58410B62",
+                "obs": ""
+              },
+              {
+                "rank": 111,
+                "name": "Soulcalibur V",
+                "titleId": "4E4D083D",
+                "obs": ""
+              },
+              {
+                "rank": 112,
+                "name": "Resident Evil: Operation Raccoon City",
+                "titleId": "4343081D",
+                "obs": ""
+              },
+              {
+                "rank": 113,
+                "name": "Dead Rising 2: Off the Record",
+                "titleId": "4343081F",
+                "obs": ""
+              },
+              {
+                "rank": 114,
+                "name": "The Amazing Spider-Man",
+                "titleId": "415608B5",
+                "obs": ""
+              },
+              {
+                "rank": 115,
+                "name": "Rise of the Tomb Raider",
+                "titleId": "53510823",
+                "obs": ""
+              },
+              {
+                "rank": 116,
+                "name": "LEGO Star Wars: The Complete Saga",
+                "titleId": "4C4107D7",
+                "obs": ""
+              },
+              {
+                "rank": 117,
+                "name": "Tom Clancy's Splinter Cell: Blacklist",
+                "titleId": "555308AD",
+                "obs": ""
+              },
+              {
+                "rank": 118,
+                "name": "Dark Souls",
+                "titleId": "4E4D083A",
+                "obs": ""
+              },
+              {
+                "rank": 119,
+                "name": "The Orange Box",
+                "titleId": "4541080F",
+                "obs": ""
+              },
+              {
+                "rank": 120,
+                "name": "Grand Theft Auto: Episodes from Liberty City",
+                "titleId": "545407F2",
+                "obs": ""
+              },
+              {
+                "rank": 121,
+                "name": "Dragon Ball Z: Raging Blast",
+                "titleId": "4E4D0815",
+                "obs": ""
+              },
+              {
+                "rank": 122,
+                "name": "Halo 3: ODST",
+                "titleId": "4D530877",
+                "obs": ""
+              },
+              {
+                "rank": 123,
+                "name": "Need for Speed: Most Wanted (2012)",
+                "titleId": "45410961",
+                "obs": ""
+              },
+              {
+                "rank": 124,
+                "name": "Burnout Paradise",
+                "titleId": "45410806",
+                "obs": ""
+              },
+              {
+                "rank": 125,
+                "name": "Rayman Legends",
+                "titleId": "555308C3",
+                "obs": ""
+              },
+              {
+                "rank": 126,
+                "name": "BioShock 2",
+                "titleId": "5454082D",
+                "obs": ""
+              },
+              {
+                "rank": 127,
+                "name": "Alan Wake",
+                "titleId": "4D53083D",
+                "obs": ""
+              },
+              {
+                "rank": 128,
+                "name": "Medal of Honor (2010)",
+                "titleId": "454108A8",
+                "obs": ""
+              },
+              {
+                "rank": 129,
+                "name": "Street Fighter IV: Ultra",
+                "titleId": "434307E1",
+                "obs": ""
+              },
+              {
+                "rank": 130,
+                "name": "Castlevania: Lords of Shadow",
+                "titleId": "4B4E07F1",
+                "obs": ""
+              },
+              {
+                "rank": 131,
+                "name": "Devil May Cry 4",
+                "titleId": "434307E8",
+                "obs": ""
+              },
+              {
+                "rank": 132,
+                "name": "Midnight Club: Los Angeles Complete Edition",
+                "titleId": "545407F8",
+                "obs": ""
+              },
+              {
+                "rank": 133,
+                "name": "Prototype 2",
+                "titleId": "415608D1",
+                "obs": ""
+              },
+              {
+                "rank": 134,
+                "name": "Rayman Origins",
+                "titleId": "55530873",
+                "obs": ""
+              },
+              {
+                "rank": 135,
+                "name": "Forza Motorsport 2",
+                "titleId": "4D5307DB",
+                "obs": ""
+              },
+              {
+                "rank": 136,
+                "name": "Dead Space",
+                "titleId": "45410831",
+                "obs": ""
+              },
+              {
+                "rank": 137,
+                "name": "Gears of War: Judgment",
+                "titleId": "4D530A26",
+                "obs": ""
+              },
+              {
+                "rank": 138,
+                "name": "Mass Effect 2",
+                "titleId": "4D5308BC",
+                "obs": ""
+              },
+              {
+                "rank": 139,
+                "name": "Saints Row 2",
+                "titleId": "545107FC",
+                "obs": ""
+              },
+              {
+                "rank": 140,
+                "name": "Crysis 3",
+                "titleId": "4541098E",
+                "obs": ""
+              },
+              {
+                "rank": 141,
+                "name": "LEGO Batman: The Videogame",
+                "titleId": "575207F7",
+                "obs": ""
+              },
+              {
+                "rank": 142,
+                "name": "UFC Personal Trainer",
+                "titleId": "5451088E",
+                "obs": ""
+              },
+              {
+                "rank": 143,
+                "name": "Mortal Kombat vs. DC Universe",
+                "titleId": "4D5707E9",
+                "obs": ""
+              },
+              {
+                "rank": 144,
+                "name": "Mirror's Edge",
+                "titleId": "45410850",
+                "obs": ""
+              },
+              {
+                "rank": 145,
+                "name": "South Park: The Stick of Truth",
+                "titleId": "555308C5",
+                "obs": ""
+              },
+              {
+                "rank": 146,
+                "name": "Dante's Inferno",
+                "titleId": "454108CF",
+                "obs": ""
+              },
+              {
+                "rank": 147,
+                "name": "Dishonored",
+                "titleId": "425307E3",
+                "obs": ""
+              },
+              {
+                "rank": 148,
+                "name": "The Witcher 2: Assassins of Kings Enhanced Edition",
+                "titleId": "57520824",
+                "obs": ""
+              },
+              {
+                "rank": 149,
+                "name": "Max Payne 3",
+                "titleId": "5454088C",
+                "obs": ""
+              },
+              {
+                "rank": 150,
+                "name": "Medal of Honor: Warfighter",
+                "titleId": "45410996",
+                "obs": ""
+              },
+              {
+                "rank": 151,
+                "name": "Dead Rising",
+                "titleId": "434307D2",
+                "obs": ""
+              },
+              {
+                "rank": 152,
+                "name": "Dead Island GOTY",
+                "titleId": "4B4D07DF",
+                "obs": ""
+              },
+              {
+                "rank": 153,
+                "name": "BioShock Infinite",
+                "titleId": "5454085D",
+                "obs": ""
+              },
+              {
+                "rank": 154,
+                "name": "L.A. Noire Complete Edition",
+                "titleId": "54540861",
+                "obs": ""
+              },
+              {
+                "rank": 155,
+                "name": "Hitman: Absolution",
+                "titleId": "53510801",
+                "obs": ""
+              },
+              {
+                "rank": 156,
+                "name": "LEGO Marvel Super Heroes",
+                "titleId": "57520835",
+                "obs": ""
+              },
+              {
+                "rank": 157,
+                "name": "Borderlands",
+                "titleId": "545407E5",
+                "obs": ""
+              },
+              {
+                "rank": 158,
+                "name": "Resident Evil 5",
+                "titleId": "434307D4",
+                "obs": ""
+              },
+              {
+                "rank": 159,
+                "name": "Gears of War Judgment",
+                "titleId": "4D530A26",
+                "obs": ""
+              },
+              {
+                "rank": 160,
+                "name": "Call of Duty Modern Warfare 3",
+                "titleId": "415608CB",
+                "obs": ""
+              },
+              {
+                "rank": 161,
+                "name": "Naruto Shippuden Ultimate Ninja Storm 3",
+                "titleId": "4E4D085C",
+                "obs": ""
+              },
+              {
+                "rank": 162,
+                "name": "Battlefield Bad Company 2",
+                "titleId": "454108A8",
+                "obs": ""
+              },
+              {
+                "rank": 163,
+                "name": "Need for Speed Carbon",
+                "titleId": "454107EC",
+                "obs": ""
+              },
+              {
+                "rank": 164,
+                "name": "Fable III",
+                "titleId": "4D5308D6",
+                "obs": ""
+              },
+              {
+                "rank": 165,
+                "name": "Darksiders",
+                "titleId": "545107D1",
+                "obs": ""
+              },
+              {
+                "rank": 166,
+                "name": "Darksiders II",
+                "titleId": "54510886",
+                "obs": ""
+              },
+              {
+                "rank": 167,
+                "name": "Crysis 2",
+                "titleId": "454108E3",
+                "obs": ""
+              },
+              {
+                "rank": 168,
+                "name": "Deadpool",
+                "titleId": "41560904",
+                "obs": ""
+              },
+              {
+                "rank": 169,
+                "name": "Street Fighter X Tekken",
+                "titleId": "4343080F",
+                "obs": ""
+              },
+              {
+                "rank": 170,
+                "name": "Spec Ops: The Line",
+                "titleId": "54540843",
+                "obs": ""
+              },
+              {
+                "rank": 171,
+                "name": "Tekken Tag Tournament 2",
+                "titleId": "4E4D0859",
+                "obs": ""
+              },
+              {
+                "rank": 172,
+                "name": "Bulletstorm",
+                "titleId": "454108EF",
+                "obs": ""
+              },
+              {
+                "rank": 173,
+                "name": "Dark Souls II",
+                "titleId": "4E4D0861",
+                "obs": ""
+              },
+              {
+                "rank": 174,
+                "name": "Driver: San Francisco",
+                "titleId": "55530835",
+                "obs": ""
+              },
+              {
+                "rank": 175,
+                "name": "Saints Row: The Third",
+                "titleId": "5451086D",
+                "obs": ""
+              },
+              {
+                "rank": 176,
+                "name": "Portal 2",
+                "titleId": "45410912",
+                "obs": ""
+              },
+              {
+                "rank": 177,
+                "name": "XCOM: Enemy Unknown",
+                "titleId": "5454087D",
+                "obs": ""
+              },
+              {
+                "rank": 178,
+                "name": "Just Cause 2",
+                "titleId": "534307E7",
+                "obs": ""
+              },
+              {
+                "rank": 179,
+                "name": "Mafia II",
+                "titleId": "545407E6",
+                "obs": ""
+              },
+              {
+                "rank": 180,
+                "name": "Mirror's Edge",
+                "titleId": "45410850",
+                "obs": ""
+              },
+              {
+                "rank": 181,
+                "name": "Shadows of the Damned",
+                "titleId": "45410931",
+                "obs": ""
+              },
+              {
+                "rank": 182,
+                "name": "Vanquish",
+                "titleId": "53450841",
+                "obs": ""
+              },
+              {
+                "rank": 183,
+                "name": "Catherine",
+                "titleId": "415407D7",
+                "obs": ""
+              },
+              {
+                "rank": 184,
+                "name": "Binary Domain",
+                "titleId": "53450850",
+                "obs": ""
+              },
+              {
+                "rank": 185,
+                "name": "Sonic & All-Stars Racing Transformed",
+                "titleId": "5345085D",
+                "obs": ""
+              },
+              {
+                "rank": 186,
+                "name": "Sonic Generations",
+                "titleId": "53450848",
+                "obs": ""
+              },
+              {
+                "rank": 187,
+                "name": "Dragon Ball Xenoverse",
+                "titleId": "4E4D0862",
+                "obs": ""
+              },
+              {
+                "rank": 188,
+                "name": "Dragon Ball Z: Budokai HD Collection",
+                "titleId": "4E4D0856",
+                "obs": ""
+              },
+              {
+                "rank": 189,
+                "name": "Naruto Shippuden: Ultimate Ninja Storm Generations",
+                "titleId": "4E4D0842",
+                "obs": ""
+              },
+              {
+                "rank": 190,
+                "name": "Naruto Shippuden: Ultimate Ninja Storm Revolution",
+                "titleId": "4E4D0868",
+                "obs": ""
+              },
+              {
+                "rank": 191,
+                "name": "Dragon Ball Z: Ultimate Tenkaichi",
+                "titleId": "4E4D0846",
+                "obs": ""
+              },
+              {
+                "rank": 192,
+                "name": "Dragon Ball Z: Burst Limit",
+                "titleId": "424107DC",
+                "obs": ""
+              },
+              {
+                "rank": 193,
+                "name": "UFC Undisputed 3",
+                "titleId": "5451087D",
+                "obs": ""
+              },
+              {
+                "rank": 194,
+                "name": "Fight Night Champion",
+                "titleId": "45410915",
+                "obs": ""
+              },
+              {
+                "rank": 195,
+                "name": "WWE 2K14",
+                "titleId": "545408B2",
+                "obs": ""
+              },
+              {
+                "rank": 196,
+                "name": "WWE '13",
+                "titleId": "545108B4",
+                "obs": ""
+              },
+              {
+                "rank": 197,
+                "name": "WWE All Stars",
+                "titleId": "54510866",
+                "obs": ""
+              },
+              {
+                "rank": 198,
+                "name": "WWE Smackdown vs Raw 2011",
+                "titleId": "5451085D",
+                "obs": ""
+              },
+              {
+                "rank": 199,
+                "name": "WWE Smackdown vs Raw 2010",
+                "titleId": "54510844",
+                "obs": ""
+              },
+              {
+                "rank": 200,
+                "name": "Dragon Ball Z Battle of Z",
+                "titleId": "4E4D0860",
+                "obs": ""
+              },
+              {
+                "rank": 201,
+                "name": "The Amazing Spider-Man 2",
+                "titleId": "41560905",
+                "obs": ""
+              },
+              {
+                "rank": 202,
+                "name": "Spider-Man: Edge of Time",
+                "titleId": "415608BB",
+                "obs": ""
+              },
+              {
+                "rank": 203,
+                "name": "Spider-Man: Web of Shadows",
+                "titleId": "41560812",
+                "obs": ""
+              },
+              {
+                "rank": 204,
+                "name": "Spider-Man: Shattered Dimensions",
+                "titleId": "4156084C",
+                "obs": ""
+              },
+              {
+                "rank": 205,
+                "name": "X-Men Origins: Wolverine",
+                "titleId": "41560811",
+                "obs": ""
+              },
+              {
+                "rank": 206,
+                "name": "LEGO Marvel's Avengers",
+                "titleId": "5752084C",
+                "obs": ""
+              },
+              {
+                "rank": 207,
+                "name": "LEGO Batman 3: Beyond Gotham",
+                "titleId": "57520845",
+                "obs": ""
+              },
+              {
+                "rank": 208,
+                "name": "LEGO Batman 2: DC Super Heroes",
+                "titleId": "57520817",
+                "obs": ""
+              },
+              {
+                "rank": 209,
+                "name": "LEGO Batman: The Videogame",
+                "titleId": "575207F7",
+                "obs": ""
+              },
+              {
+                "rank": 210,
+                "name": "LEGO Star Wars: The Complete Saga",
+                "titleId": "4C4107D7",
+                "obs": ""
+              },
+              {
+                "rank": 211,
+                "name": "LEGO Jurassic World",
+                "titleId": "5752084D",
+                "obs": ""
+              },
+              {
+                "rank": 212,
+                "name": "LEGO Indiana Jones: The Original Adventures",
+                "titleId": "4C4107D6",
+                "obs": ""
+              },
+              {
+                "rank": 213,
+                "name": "LEGO The Lord of the Rings",
+                "titleId": "57520819",
+                "obs": ""
+              },
+              {
+                "rank": 214,
+                "name": "LEGO The Hobbit",
+                "titleId": "57520842",
+                "obs": ""
+              },
+              {
+                "rank": 215,
+                "name": "Sonic Unleashed",
+                "titleId": "53450812",
+                "obs": ""
+              },
+              {
+                "rank": 216,
+                "name": "Sonic Colors",
+                "titleId": "",
+                "obs": ""
+              },
+              {
+                "rank": 217,
+                "name": "Rayman Legends",
+                "titleId": "555308C3",
+                "obs": ""
+              },
+              {
+                "rank": 218,
+                "name": "Rayman Origins",
+                "titleId": "55530873",
+                "obs": ""
+              },
+              {
+                "rank": 219,
+                "name": "Alice Madness Returns",
+                "titleId": "45410916",
+                "obs": ""
+              },
+              {
+                "rank": 220,
+                "name": "South Park: The Stick of Truth",
+                "titleId": "555308C5",
+                "obs": ""
+              },
+              {
+                "rank": 221,
+                "name": "Castle Crashers",
+                "titleId": "584108B7",
+                "obs": ""
+              },
+              {
+                "rank": 222,
+                "name": "BattleBlock Theater",
+                "titleId": "58410A16",
+                "obs": ""
+              },
+              {
+                "rank": 223,
+                "name": "Minecraft: Story Mode",
+                "titleId": "5841149E",
+                "obs": ""
+              },
+              {
+                "rank": 224,
+                "name": "Telltale Games' The Walking Dead",
+                "titleId": "584111DE",
+                "obs": ""
+              },
+              {
+                "rank": 225,
+                "name": "The Wolf Among Us",
+                "titleId": "58411216",
+                "obs": ""
+              },
+              {
+                "rank": 226,
+                "name": "Life is Strange",
+                "titleId": "5841147C",
+                "obs": ""
+              },
+              {
+                "rank": 227,
+                "name": "The Walking Dead Season 2",
+                "titleId": "58411406",
+                "obs": ""
+              },
+              {
+                "rank": 228,
+                "name": "Game of Thrones: A Telltale Games Series",
+                "titleId": "5841145C",
+                "obs": ""
+              },
+              {
+                "rank": 229,
+                "name": "Tales from the Borderlands",
+                "titleId": "5841145D",
+                "obs": ""
+              },
+              {
+                "rank": 230,
+                "name": "Max Payne",
+                "titleId": "4D530855",
+                "obs": ""
+              },
+              {
+                "rank": 231,
+                "name": "Max Payne 2: The Fall of Max Payne",
+                "titleId": "4D530857",
+                "obs": ""
+              },
+              {
+                "rank": 232,
+                "name": "Star Wars Battlefront",
+                "titleId": "4C41083D",
+                "obs": ""
+              },
+              {
+                "rank": 233,
+                "name": "Star Wars Battlefront II",
+                "titleId": "4C41083E",
+                "obs": ""
+              },
+              {
+                "rank": 234,
+                "name": "Star Wars Knights of the Old Republic",
+                "titleId": "4C41083B",
+                "obs": ""
+              },
+              {
+                "rank": 235,
+                "name": "Star Wars Knights of the Old Republic II",
+                "titleId": "4C41083C",
+                "obs": ""
+              },
+              {
+                "rank": 236,
+                "name": "Mass Effect",
+                "titleId": "4D5307E8",
+                "obs": ""
+              },
+              {
+                "rank": 237,
+                "name": "Mass Effect 2",
+                "titleId": "4D5308BC",
+                "obs": ""
+              },
+              {
+                "rank": 238,
+                "name": "Mass Effect 3",
+                "titleId": "4D5308D8",
+                "obs": ""
+              },
+              {
+                "rank": 239,
+                "name": "Dragon Age Origins",
+                "titleId": "454108DA",
+                "obs": ""
+              },
+              {
+                "rank": 240,
+                "name": "Dragon Age II",
+                "titleId": "4541090B",
+                "obs": ""
+              },
+              {
+                "rank": 241,
+                "name": "Dragon Age Inquisition",
+                "titleId": "45410997",
+                "obs": ""
+              },
+              {
+                "rank": 242,
+                "name": "Fallout 3",
+                "titleId": "425307D5",
+                "obs": ""
+              },
+              {
+                "rank": 243,
+                "name": "Fallout New Vegas",
+                "titleId": "425307E0",
+                "obs": ""
+              },
+              {
+                "rank": 244,
+                "name": "Dead Island Riptide",
+                "titleId": "4B4D0800",
+                "obs": ""
+              },
+              {
+                "rank": 245,
+                "name": "Deus Ex: Human Revolution",
+                "titleId": "535107FA",
+                "obs": ""
+              },
+              {
+                "rank": 246,
+                "name": "WWE SmackDown vs. Raw 2010",
+                "titleId": "54510844",
+                "obs": ""
+              },
+              {
+                "rank": 247,
+                "name": "Star Wars: The Force Unleashed",
+                "titleId": "4C4107D2",
+                "obs": ""
+              },
+              {
+                "rank": 248,
+                "name": "Star Wars: The Force Unleashed II",
+                "titleId": "4C4107F2",
+                "obs": ""
+              },
+              {
+                "rank": 249,
+                "name": "Resident Evil HD Remaster",
+                "titleId": "43430841",
+                "obs": ""
+              },
+              {
+                "rank": 250,
+                "name": "Resident Evil 0",
+                "titleId": "43430842",
+                "obs": ""
+              },
+              {
+                "rank": 251,
+                "name": "Iron Man",
+                "titleId": "534507F2",
+                "obs": ""
+              },
+              {
+                "rank": 252,
+                "name": "Iron Man 2",
+                "titleId": "53450836",
+                "obs": ""
+              },
+              {
+                "rank": 253,
+                "name": "Transformers: War for Cybertron",
+                "titleId": "4156084C",
+                "obs": ""
+              },
+              {
+                "rank": 254,
+                "name": "Transformers: Fall of Cybertron",
+                "titleId": "4156089C",
+                "obs": ""
+              },
+              {
+                "rank": 255,
+                "name": "WET",
+                "titleId": "425307DB",
+                "obs": ""
+              },
+              {
+                "rank": 256,
+                "name": "Mercenaries 2: World in Flames",
+                "titleId": "45410828",
+                "obs": ""
+              },
+              {
+                "rank": 257,
+                "name": "Tom Clancy's Rainbow Six Vegas",
+                "titleId": "555307D6",
+                "obs": ""
+              },
+              {
+                "rank": 258,
+                "name": "Tom Clancy's Rainbow Six Vegas 2",
+                "titleId": "55530807",
+                "obs": ""
+              },
+              {
+                "rank": 259,
+                "name": "Trials Evolution",
+                "titleId": "58410AAD",
+                "obs": ""
+              },
+              {
+                "rank": 260,
+                "name": "Trials Fusion",
+                "titleId": "58411401",
+                "obs": ""
+              },
+              {
+                "rank": 261,
+                "name": "Guitar Hero 5",
+                "titleId": "41560840",
+                "obs": ""
+              },
+              {
+                "rank": 262,
+                "name": "GUN",
+                "titleId": "415607D3",
+                "obs": ""
+              },
+              {
+                "rank": 263,
+                "name": "LIMBO",
+                "titleId": "4D5307F3",
+                "obs": ""
+              },
+              {
+                "rank": 264,
+                "name": "Silent Hill: Homecoming",
+                "titleId": "4B4E07E5",
+                "obs": ""
+              },
+              {
+                "rank": 265,
+                "name": "Silent Hill: Downpour",
+                "titleId": "4B4E0823",
+                "obs": ""
+              },
+              {
+                "rank": 266,
+                "name": "Silent Hill HD Collection",
+                "titleId": "4B4E0845",
+                "obs": ""
+              },
+              {
+                "rank": 267,
+                "name": "Fallout: New Vegas",
+                "titleId": "425307E0",
+                "obs": ""
+              },
+              {
+                "rank": 268,
+                "name": "Middle-earth: Shadow of Mordor",
+                "titleId": "5752082C",
+                "obs": ""
+              },
+              {
+                "rank": 269,
+                "name": "007: Blood Stone",
+                "titleId": "4156081F",
+                "obs": ""
+              },
+              {
+                "rank": 270,
+                "name": "007 Legends",
+                "titleId": "415608D8",
+                "obs": ""
+              },
+              {
+                "rank": 271,
+                "name": "GoldenEye 007: Reloaded",
+                "titleId": "415608AF",
+                "obs": ""
+              },
+              {
+                "rank": 272,
+                "name": "50 Cent: Blood on the Sand",
+                "titleId": "5451083B",
+                "obs": ""
+              },
+              {
+                "rank": 273,
+                "name": "Lollipop Chainsaw",
+                "titleId": "565707D0",
+                "obs": ""
+              },
+              {
+                "rank": 274,
+                "name": "Alice: Madness Returns",
+                "titleId": "45410916",
+                "obs": ""
+              },
+              {
+                "rank": 275,
+                "name": "Kingdoms of Amalur: Reckoning",
+                "titleId": "4541093E",
+                "obs": ""
+              },
+              {
+                "rank": 276,
+                "name": "Prince of Persia",
+                "titleId": "58410865",
+                "obs": ""
+              },
+              {
+                "rank": 277,
+                "name": "Prince of Persia: The Forgotten Sands",
+                "titleId": "5553083E",
+                "obs": ""
+              },
+              {
+                "rank": 278,
+                "name": "Singularity",
+                "titleId": "415607EF",
+                "obs": ""
+              },
+              {
+                "rank": 279,
+                "name": "Dishonored",
+                "titleId": "425307E3",
+                "obs": ""
+              },
+              {
+                "rank": 280,
+                "name": "Spider-Man: Friend or Foe",
+                "titleId": "415607FA",
+                "obs": ""
+              },
+              {
+                "rank": 281,
+                "name": "Ben 10 Alien Force: Vilgax Attacks",
+                "titleId": "445007F1",
+                "obs": ""
+              },
+              {
+                "rank": 282,
+                "name": "Ben 10 Ultimate Alien: Cosmic Destruction",
+                "titleId": "445007F7",
+                "obs": ""
+              },
+              {
+                "rank": 283,
+                "name": "Crash of the Titans",
+                "titleId": "565507E4",
+                "obs": ""
+              },
+              {
+                "rank": 284,
+                "name": "Cars 2",
+                "titleId": "545107EA",
+                "obs": ""
+              },
+              {
+                "rank": 285,
+                "name": "Kung Fu Panda",
+                "titleId": "41560807",
+                "obs": ""
+              },
+              {
+                "rank": 286,
+                "name": "Minecraft: Story Mode - Season One",
+                "titleId": "5841149E",
+                "obs": ""
+              },
+              {
+                "rank": 287,
+                "name": "Viva Piñata",
+                "titleId": "4D5307F2",
+                "obs": ""
+              },
+              {
+                "rank": 288,
+                "name": "Mass Effect 3",
+                "titleId": "4D5308D8",
+                "obs": ""
+              },
+              {
+                "rank": 289,
+                "name": "PAYDAY 2",
+                "titleId": "464F0800",
+                "obs": ""
+              },
+              {
+                "rank": 290,
+                "name": "Dragon's Dogma: Dark Arisen",
+                "titleId": "43430919",
+                "obs": ""
+              },
+              {
+                "rank": 291,
+                "name": "Mass Effect",
+                "titleId": "4D5307E8",
+                "obs": ""
+              },
+              {
+                "rank": 292,
+                "name": "WWE 2K16",
+                "titleId": "315A07D2",
+                "obs": ""
+              },
+              {
+                "rank": 293,
+                "name": "WWE 2K15",
+                "titleId": "545408B6",
+                "obs": ""
+              },
+              {
+                "rank": 294,
+                "name": "WWE SmackDown vs. Raw 2011",
+                "titleId": "5451085D",
+                "obs": ""
+              },
+              {
+                "rank": 295,
+                "name": "Dragon Ball Z: Battle of Z",
+                "titleId": "4E4D0860",
+                "obs": ""
+              },
+              {
+                "rank": 296,
+                "name": "Halo: Combat Evolved Anniversary",
+                "titleId": "4D5309B1",
+                "obs": ""
+              },
+              {
+                "rank": 297,
+                "name": "Forza Motorsport 3",
+                "titleId": "4D53084D",
+                "obs": ""
+              },
+              {
+                "rank": 298,
+                "name": "Dead Island: Riptide",
+                "titleId": "4B4D07F2",
+                "obs": ""
+              },
+              {
+                "rank": 299,
+                "name": "Guitar Hero: World Tour",
+                "titleId": "4156081A",
+                "obs": ""
+              },
+              {
+                "rank": 300,
+                "name": "Dying Light",
+                "titleId": "",
+                "obs": ""
+              }
+            ];
+
+        const STORAGE_KEY = 'top300GameState';
+
+        function readPersistedState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (err) {
+                console.error('Falha ao ler progresso salvo:', err);
+                return {};
+            }
+        }
+
+        function writePersistedState(state) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                return true;
+            } catch (err) {
+                console.error('Falha ao salvar progresso:', err);
+                showToast('Não foi possível salvar o progresso neste navegador.');
+                return false;
+            }
+        }
+
+        const container = document.getElementById('game-list-container');
+        const savedStates = readPersistedState();
+
+        const CHECK_STEPS = [
+            { key: 'downloading',  label: 'Baixando',      title: 'Baixando' },
+            { key: 'onPc',         label: 'No PC',         title: 'No PC' },
+            { key: 'onHd',         label: 'No HD',         title: 'No HD' },
+            { key: 'tested',       label: 'Testado',       title: 'Testado' },
+            { key: 'obsReviewed',  label: 'Obs revisada',  title: 'Observação revisada' }
+        ];
+
+        const FINAL_CHECK_KEY = 'obsReviewed';
+        const LIBRARY_MATCHED_GAME_IDS = new Set([
+                'game_2', // 3. Call of Duty: Black Ops II
+                'game_8', // 9. Call of Duty: Modern Warfare 3
+                'game_10', // 11. Far Cry 3
+                'game_12', // 13. Resident Evil 6
+                'game_13', // 14. Assassin's Creed IV: Black Flag
+                'game_17', // 18. Halo: Reach
+                'game_19', // 20. Need for Speed: Hot Pursuit
+                'game_22', // 23. Resident Evil 5
+                'game_23', // 24. Call of Duty: Black Ops
+                'game_26', // 27. Need for Speed Carbon
+                'game_31', // 32. Borderlands 2
+                'game_34', // 35. Far Cry 4
+                'game_36', // 37. Need for Speed: Rivals
+                'game_37', // 38. Tomb Raider
+                'game_38', // 39. Resident Evil 4
+                'game_43', // 44. Call of Duty: Modern Warfare 2
+                'game_46', // 47. Halo 4
+                'game_49', // 50. Need for Speed: ProStreet
+                'game_52', // 53. Call of Duty: Ghosts
+                'game_55', // 56. Resident Evil Revelations
+                'game_58', // 59. Assassin's Creed III
+                'game_59', // 60. Need for Speed: The Run
+                'game_73', // 74. Need for Speed: Undercover
+                'game_76', // 77. Halo 3
+                'game_77', // 78. Assassin's Creed Rogue
+                'game_83', // 84. Need for Speed: Shift
+                'game_84', // 85. The Elder Scrolls IV: Oblivion
+                'game_92', // 93. State of Decay
+                'game_102', // 103. Call of Duty: Advanced Warfare
+                'game_111', // 112. Resident Evil: Operation Raccoon City
+                'game_114', // 115. Rise of the Tomb Raider
+                'game_116', // 117. Tom Clancy's Splinter Cell: Blacklist
+                'game_117', // 118. Dark Souls
+                'game_121', // 122. Halo 3: ODST
+                'game_122', // 123. Need for Speed: Most Wanted (2012)
+                'game_129', // 130. Castlevania: Lords of Shadow
+                'game_139', // 140. Crysis 3
+                'game_145', // 146. Dante's Inferno
+                'game_147', // 148. The Witcher 2: Assassins of Kings Enhanced Edition
+                'game_151', // 152. Dead Island GOTY
+                'game_153', // 154. L.A. Noire Complete Edition
+                'game_157', // 158. Resident Evil 5
+                'game_159', // 160. Call of Duty Modern Warfare 3
+                'game_162', // 163. Need for Speed Carbon
+                'game_166', // 167. Crysis 2
+                'game_172', // 173. Dark Souls II
+                'game_238', // 239. Dragon Age Origins
+                'game_243', // 244. Dead Island Riptide
+                'game_244', // 245. Deus Ex: Human Revolution
+                'game_267', // 268. Middle-earth: Shadow of Mordor
+                'game_268', // 269. 007: Blood Stone
+                'game_269', // 270. 007 Legends
+                'game_270', // 271. GoldenEye 007: Reloaded
+                'game_289', // 290. Dragon's Dogma: Dark Arisen
+                'game_295', // 296. Halo: Combat Evolved Anniversary
+                'game_297', // 298. Dead Island: Riptide
+        ]);
+        const LANGUAGE_OPTIONS = [
+            { value: 'nao', label: 'NÃO' },
+            { value: 'legendado', label: 'Legendado' },
+            { value: 'dublado', label: 'Dublado' }
+        ];
+
+        function normalizeChecks(checks, obs = '') {
+            const normalized = {
+                downloading: !!(checks.downloading ?? checks.downloaded),
+                onPc:        !!(checks.onPc ?? checks.installed),
+                onHd:        !!checks.onHd,
+                tested:      !!checks.tested,
+                obsReviewed: !!(checks.obsReviewed ?? checks.finished)
+            };
+            if (obs.trim() !== '') normalized.obsReviewed = false;
+            return normalized;
+        }
+
+        function normalizeLanguage(value) {
+            return LANGUAGE_OPTIONS.some(option => option.value === value) ? value : 'nao';
+        }
+
+        function migrateLegacyState(state) {
+            let changed = false;
+            Object.keys(state).forEach(id => {
+                const entry = state[id];
+                if (entry && entry.listed === true && entry.checks === undefined) {
+                    const obs = entry.obs !== undefined ? entry.obs : '';
+                    entry.checks = normalizeChecks({
+                        downloaded: true, installed: true, tested: true,
+                        finished: obs.trim() === ''
+                    }, obs);
+                    entry.listed = isAllChecked(entry.checks);
+                    changed = true;
+                } else if (entry && entry.checks) {
+                    const obs = entry.obs !== undefined ? entry.obs : '';
+                    const normalized = normalizeChecks(entry.checks, obs);
+                    const normalizedChanged = CHECK_STEPS.some(step => entry.checks[step.key] !== normalized[step.key]);
+                    if (normalizedChanged || entry.listed !== isAllChecked(normalized)) {
+                        entry.checks = normalized;
+                        entry.listed = isAllChecked(normalized);
+                        changed = true;
+                    }
+                }
+                if (entry && entry.language !== normalizeLanguage(entry.language)) {
+                    entry.language = normalizeLanguage(entry.language);
+                    changed = true;
+                }
+            });
+            if (changed) writePersistedState(state);
+            return state;
+        }
+
+        function seedLibraryCheckState(state) {
+            let changed = false;
+            LIBRARY_MATCHED_GAME_IDS.forEach(gameId => {
+                if (!state[gameId]) {
+                    state[gameId] = {};
+                    changed = true;
+                }
+                if (!state[gameId].checks) {
+                    state[gameId].checks = {};
+                    changed = true;
+                }
+                ['downloading', 'onPc'].forEach(key => {
+                    if (state[gameId].checks[key] !== true) {
+                        state[gameId].checks[key] = true;
+                        changed = true;
+                    }
+                });
+                const obs = state[gameId].obs !== undefined ? state[gameId].obs : '';
+                const normalized = normalizeChecks(state[gameId].checks, obs);
+                const normalizedChanged = CHECK_STEPS.some(step => state[gameId].checks[step.key] !== normalized[step.key]);
+                if (normalizedChanged || state[gameId].listed !== isAllChecked(normalized)) {
+                    state[gameId].checks = normalized;
+                    state[gameId].listed = isAllChecked(normalized);
+                    changed = true;
+                }
+            });
+            if (changed) writePersistedState(state);
+            return state;
+        }
+
+        const stateData = migrateLegacyState(savedStates);
+
+        function getChecks(gameId, defaultObs = '') {
+            const checks = stateData[gameId]?.checks || {};
+            const obs = stateData[gameId]?.obs !== undefined ? stateData[gameId].obs : defaultObs;
+            return normalizeChecks(checks, obs);
+        }
+
+        function isAllChecked(checks) {
+            return CHECK_STEPS.every(step => !!checks[step.key]);
+        }
+
+        function checkedCount(checks) {
+            return CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0);
+        }
+
+        gamesData.forEach((game, index) => {
+            const gameId = 'game_' + index;
+            const savedObs = stateData[gameId]?.obs !== undefined ? stateData[gameId].obs : game.obs;
+            const checks = getChecks(gameId, savedObs);
+            const language = normalizeLanguage(stateData[gameId]?.language);
+            const allDone = isAllChecked(checks);
+            const progress = checkedCount(checks) / CHECK_STEPS.length;
+
+            const renderCheckButton = step => {
+                const on = checks[step.key];
+                return `
+                    <button class="action-btn check-btn ${on ? 'checked' : ''}"
+                            onclick="toggleCheck(this, '${gameId}', '${step.key}', event)"
+                            title="${step.title}">
+                        <span class="material-icons">${on ? 'check_circle' : 'radio_button_unchecked'}</span>
+                        <span class="check-label">${step.label}</span>
+                    </button>
+                `;
+            };
+
+            const languageOptionsHtml = LANGUAGE_OPTIONS.map(option => `
+                <option value="${option.value}" ${language === option.value ? 'selected' : ''}>${option.label}</option>
+            `).join('');
+
+            const hasLang = language !== 'nao' ? 'has-lang' : '';
+            const languageHtml = `
+                <label class="language-select-container ${hasLang}" title="Idioma">
+                    <span class="language-label">Idioma</span>
+                    <select class="language-select" onclick="event.stopPropagation()" onchange="saveLanguage('${gameId}', this.value, event)">
+                        ${languageOptionsHtml}
+                    </select>
+                </label>
+            `;
+            const controlsHtml = [
+                ...CHECK_STEPS.filter(step => step.key !== FINAL_CHECK_KEY).map(renderCheckButton),
+                languageHtml,
+                renderCheckButton(CHECK_STEPS.find(step => step.key === FINAL_CHECK_KEY))
+            ].join('');
+
+            const safeName = game.name.replace(/'/g, "\\'");
+            const tid = game.titleId || 'sem registro';
+
+            const html = `
+                <div class="game-item ${allDone ? 'listed' : ''}" id="${gameId}" style="--progress:${progress}">
+                    <div class="game-header" onclick="toggleGame(this, event)">
+                        <div class="game-title-container">
+                            <div class="checks-group">${controlsHtml}</div>
+                            <span class="game-info">
+                                <span class="game-name">${game.rank}. ${game.name}</span>
+                                <span class="title-id"><span class="title-id-key">Title ID</span>${tid}</span>
+                            </span>
+                        </div>
+                        <button class="action-btn copy-btn" onclick="copyName('${safeName}', event)" title="Copiar Nome">
+                            <span class="material-icons">content_copy</span>
+                        </button>
+                    </div>
+                    <div class="observations">
+                        <textarea placeholder="Adicione suas observações aqui..." oninput="saveText('${gameId}', this.value, this)">${savedObs}</textarea>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+
+        updateSummary();
+        updateToggleAllButton();
+
+        function toggleGame(element, event) {
+            if (event.target.closest('.action-btn')) return;
+            const obsDiv = element.nextElementSibling;
+            obsDiv.classList.toggle('expanded');
+            updateToggleAllButton();
+        }
+
+        function toggleAllObservations(event) {
+            event.stopPropagation();
+            const observations = Array.from(document.querySelectorAll('.observations'));
+            const observationsWithText = observations.filter(hasObservationText);
+            if (observationsWithText.length === 0) {
+                observations.forEach(obs => obs.classList.remove('expanded'));
+                updateToggleAllButton();
+                showToast("Nenhum jogo com observações.");
+                return;
+            }
+            const shouldExpand = observationsWithText.some(obs => !obs.classList.contains('expanded'));
+            observations.forEach(obs => {
+                obs.classList.toggle('expanded', shouldExpand && hasObservationText(obs));
+            });
+            updateToggleAllButton();
+        }
+
+        function updateToggleAllButton() {
+            const button = document.getElementById('toggle-all-observations');
+            const observations = Array.from(document.querySelectorAll('.observations'));
+            const observationsWithText = observations.filter(hasObservationText);
+            const allExpanded = observationsWithText.length > 0 && observationsWithText.every(obs => obs.classList.contains('expanded'));
+            button.title = allExpanded ? 'Colapsar observações preenchidas' : 'Mostrar observações preenchidas';
+            button.querySelector('.material-icons').innerText = allExpanded ? 'unfold_less' : 'unfold_more';
+            button.querySelector('span:last-child').innerText = allExpanded ? 'Colapsar obs' : 'Mostrar obs';
+        }
+
+        function hasObservationText(obsDiv) {
+            const textarea = obsDiv.querySelector('textarea');
+            return !!textarea && textarea.value.trim() !== '';
+        }
+
+        function saveLanguage(gameId, value, event) {
+            event.stopPropagation();
+            const normalized = normalizeLanguage(value);
+            updateState(gameId, 'language', normalized);
+            const select = event.target;
+            const container = select.closest('.language-select-container');
+            if (container) container.classList.toggle('has-lang', normalized !== 'nao');
+            updateSummary();
+        }
+
+        function toggleCheck(btn, gameId, stepKey, event) {
+            event.stopPropagation();
+            const gameItem = btn.closest('.game-item');
+            const textarea = gameItem.querySelector('textarea');
+            const nowOn = !btn.classList.contains('checked');
+            if (stepKey === FINAL_CHECK_KEY && nowOn && textarea.value.trim() !== '') {
+                const obsDiv = gameItem.querySelector('.observations');
+                obsDiv.classList.add('expanded');
+                textarea.focus();
+                showToast("Limpe as observações antes de marcar Obs revisada.");
+                return;
+            }
+            btn.classList.toggle('checked', nowOn);
+            btn.querySelector('.material-icons').innerText = nowOn ? 'check_circle' : 'radio_button_unchecked';
+
+            let state = readPersistedState();
+            if (!state[gameId]) state[gameId] = {};
+            if (!state[gameId].checks) state[gameId].checks = {};
+            state[gameId].checks[stepKey] = nowOn;
+            const checks = state[gameId].checks;
+            const allDone = CHECK_STEPS.every(step => !!checks[step.key]);
+            const progress = CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0) / CHECK_STEPS.length;
+            state[gameId].listed = allDone;
+            gameItem.classList.toggle('listed', allDone);
+            gameItem.style.setProperty('--progress', progress);
+            writePersistedState(state);
+            updateSummary();
+        }
+
+        function copyName(name, event) {
+            event.stopPropagation();
+            navigator.clipboard.writeText(name).then(() => {
+                showToast("Copiado: " + name);
+            }).catch(err => { console.error('Failed to copy: ', err); });
+        }
+
+        function saveText(gameId, text, textarea) {
+            updateState(gameId, 'obs', text);
+            updateToggleAllButton();
+            if (text.trim() === '') return;
+            const gameItem = textarea.closest('.game-item');
+            const finalBtn = gameItem.querySelector(`.check-btn[onclick*="'${FINAL_CHECK_KEY}'"]`);
+            if (!finalBtn || !finalBtn.classList.contains('checked')) return;
+            finalBtn.classList.remove('checked');
+            finalBtn.querySelector('.material-icons').innerText = 'radio_button_unchecked';
+            gameItem.classList.remove('listed');
+            let state = readPersistedState();
+            if (!state[gameId]) state[gameId] = {};
+            if (!state[gameId].checks) state[gameId].checks = {};
+            state[gameId].checks[FINAL_CHECK_KEY] = false;
+            state[gameId].listed = false;
+            const checks = state[gameId].checks;
+            const progress = CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0) / CHECK_STEPS.length;
+            gameItem.style.setProperty('--progress', progress);
+            writePersistedState(state);
+            updateSummary();
+        }
+
+        function getCurrentState() {
+            return readPersistedState();
+        }
+
+        function getCurrentChecks(gameId) {
+            const state = getCurrentState();
+            const entry = state[gameId] || {};
+            const textarea = document.querySelector(`#${gameId} textarea`);
+            const obs = entry.obs !== undefined ? entry.obs : (textarea ? textarea.value : '');
+            return normalizeChecks(entry.checks || {}, obs);
+        }
+
+        function updateSummary() {
+            const stats = CHECK_STEPS.map(step => ({ ...step, count: 0 }));
+            const languageStats = { legendado: 0, dublado: 0 };
+            const state = getCurrentState();
+            let completed = 0;
+            gamesData.forEach((game, index) => {
+                const gameId = 'game_' + index;
+                const checks = getCurrentChecks(gameId);
+                stats.forEach(stat => { if (checks[stat.key]) stat.count += 1; });
+                const language = normalizeLanguage(state[gameId]?.language);
+                if (languageStats[language] !== undefined) languageStats[language] += 1;
+                if (isAllChecked(checks)) completed += 1;
+            });
+
+            const items = [
+                { label: 'Jogos na lista', count: gamesData.length, kind: 'primary' },
+                ...stats.map(stat => ({ label: stat.label, count: stat.count })),
+                { label: 'Legendado', count: languageStats.legendado },
+                { label: 'Dublado', count: languageStats.dublado },
+                { label: 'Concluídos', count: completed, kind: 'success' }
+            ];
+
+            document.getElementById('stats-summary').innerHTML = items.map(item => {
+                const cls = item.kind === 'primary' ? 'is-primary' : item.kind === 'success' ? 'is-success' : '';
+                return `
+                    <div class="stat-card ${cls}">
+                        <span class="stat-value">${item.count}</span>
+                        <span class="stat-label" title="${item.label}">${item.label}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const total = gamesData.length;
+            const pct = total === 0 ? 0 : (completed / total) * 100;
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = `${completed} / ${total} concluídos`;
+        }
+
+        function updateState(gameId, key, value) {
+            let state = readPersistedState();
+            if (!state[gameId]) state[gameId] = {};
+            state[gameId][key] = value;
+            writePersistedState(state);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function exportState(event) {
+            event.stopPropagation();
+            const state = readPersistedState();
+            const payload = { storageKey: STORAGE_KEY, exportedAt: new Date().toISOString(), state };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            a.href = url;
+            a.download = `top-300-br_${stamp}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Progresso exportado.");
+        }
+
+        function importState(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const incoming = (parsed && parsed.state && typeof parsed.state === 'object') ? parsed.state : parsed;
+                    if (!incoming || typeof incoming !== 'object') throw new Error('Formato inválido.');
+                    if (!confirm('Substituir o progresso atual pelo do arquivo importado?')) {
+                        event.target.value = '';
+                        return;
+                    }
+                    writePersistedState(incoming);
+                    showToast("Progresso importado. Recarregando...");
+                    setTimeout(() => location.reload(), 700);
+                } catch (err) {
+                    showToast("Arquivo inválido: " + err.message);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>

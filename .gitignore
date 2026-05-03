@@ -1,0 +1,15 @@
+# Publicar somente o Top 300 e dependencias diretas.
+*
+
+!top_300_br.html
+!index.html
+!assets/
+!assets/styles.css
+!.nojekyll
+!.gitignore
+!.gitattributes
+!README.md
+!PUBLICAR_NO_GITHUB.md
+
+.DS_Store
+Thumbs.db
