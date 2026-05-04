@@ -136,7 +136,7 @@ h1 .h1-accent {
 
 .dashboard {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr minmax(260px, 0.85fr) auto;
     gap: 14px;
     align-items: stretch;
     margin-top: 18px;
@@ -198,6 +198,107 @@ h1 .h1-accent {
     white-space: nowrap;
     text-transform: uppercase;
     letter-spacing: 0.06em;
+}
+
+.filter-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 8px;
+    align-content: start;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg-1);
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.filter-field span {
+    color: var(--ink-3);
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.filter-field select {
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg-0);
+    color: var(--ink-1);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 8px;
+}
+
+.filter-field select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.filter-checks {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.filter-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    min-height: 32px;
+    padding: 5px 7px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg-2);
+    color: var(--ink-2);
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.filter-check input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+.filter-check:has(input:checked) {
+    color: var(--accent);
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+}
+
+.clear-filter-btn {
+    grid-column: 1 / -1;
+    min-height: 34px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg-2);
+    color: var(--ink-2);
+    gap: 6px;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.clear-filter-btn .material-icons {
+    font-size: 17px;
 }
 
 /* ─── Toolbar actions group ─── */
@@ -635,6 +736,8 @@ textarea:focus {
         grid-template-columns: 1fr;
     }
 
+    .filter-panel { width: 100%; }
+
     .toolbar-actions { width: 100%; }
 
     .toolbar-btn { flex: 1 1 150px; min-height: 46px; }
@@ -689,6 +792,26 @@ textarea:focus {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
+    }
+
+    .filter-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        padding: 8px;
+    }
+
+    .filter-checks {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filter-field select,
+    .clear-filter-btn {
+        min-height: 40px;
+    }
+
+    .filter-check {
+        min-height: 34px;
+        font-size: 0.58rem;
     }
 
     .toolbar-btn {
@@ -772,6 +895,11 @@ textarea:focus {
 @media (max-width: 380px) {
     .stats-grid,
     .toolbar-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-panel,
+    .filter-checks {
         grid-template-columns: 1fr;
     }
 

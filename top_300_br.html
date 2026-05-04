@@ -24,6 +24,27 @@
             </div>
             <div class="dashboard">
                 <div class="stats-grid" id="stats-summary" aria-live="polite"></div>
+                <div class="filter-panel" aria-label="Filtros da lista">
+                    <label class="filter-field">
+                        <span>Ordem</span>
+                        <select id="sort-mode" onchange="applyListView()">
+                            <option value="rank">Ranking</option>
+                            <option value="alpha">A-Z</option>
+                        </select>
+                    </label>
+                    <label class="filter-field">
+                        <span>Checks</span>
+                        <select id="check-filter-mode" onchange="applyListView()">
+                            <option value="all">Todos marcados</option>
+                            <option value="any">Qualquer marcado</option>
+                        </select>
+                    </label>
+                    <div class="filter-checks" id="filter-checks" aria-label="Filtrar por checks"></div>
+                    <button class="action-btn clear-filter-btn" onclick="clearListFilters(event)" title="Limpar filtros">
+                        <span class="material-icons">filter_alt_off</span>
+                        <span>Limpar</span>
+                    </button>
+                </div>
                 <div class="toolbar-actions">
                     <button class="action-btn toolbar-btn" id="toggle-all-observations" onclick="toggleAllObservations(event)" title="Mostrar todas as observações">
                         <span class="material-icons">unfold_more</span>
@@ -1941,6 +1962,7 @@
         ];
 
         const FINAL_CHECK_KEY = 'obsReviewed';
+        const gameViewItems = [];
         const LIBRARY_MATCHED_GAME_IDS = new Set([
                 'game_2', // 3. Call of Duty: Black Ops II
                 'game_8', // 9. Call of Duty: Modern Warfare 3
@@ -2098,6 +2120,78 @@
             return CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0);
         }
 
+        function initFilterControls() {
+            const filterChecks = document.getElementById('filter-checks');
+            if (!filterChecks) return;
+            filterChecks.innerHTML = CHECK_STEPS.map(step => `
+                <label class="filter-check" title="${step.title}">
+                    <input type="checkbox" value="${step.key}" onchange="applyListView()">
+                    <span>${step.label}</span>
+                </label>
+            `).join('');
+        }
+
+        function getSelectedFilterChecks() {
+            return Array.from(document.querySelectorAll('#filter-checks input:checked'))
+                .map(input => input.value);
+        }
+
+        function gameMatchesFilters(gameId) {
+            const selected = getSelectedFilterChecks();
+            if (selected.length === 0) return true;
+            const mode = document.getElementById('check-filter-mode')?.value || 'all';
+            const checks = getCurrentChecks(gameId);
+            if (mode === 'any') return selected.some(key => !!checks[key]);
+            return selected.every(key => !!checks[key]);
+        }
+
+        function applyListView() {
+            const sortMode = document.getElementById('sort-mode')?.value || 'rank';
+            const ordered = [...gameViewItems].sort((a, b) => {
+                if (sortMode === 'alpha') {
+                    return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }) || a.rank - b.rank;
+                }
+                return a.rank - b.rank;
+            });
+            const fragment = document.createDocumentFragment();
+            let visibleCount = 0;
+            ordered.forEach(item => {
+                const visible = gameMatchesFilters(item.gameId);
+                item.element.hidden = !visible;
+                if (visible) visibleCount += 1;
+                fragment.appendChild(item.element);
+            });
+            container.appendChild(fragment);
+            updateFilterSummary(visibleCount);
+            updateToggleAllButton();
+        }
+
+        function updateFilterSummary(visibleCount) {
+            const total = gameViewItems.length;
+            const selected = getSelectedFilterChecks();
+            const hasFilter = selected.length > 0 || (document.getElementById('sort-mode')?.value || 'rank') !== 'rank';
+            const progressText = document.getElementById('progress-text');
+            if (!progressText) return;
+            if (hasFilter) {
+                progressText.textContent = `${visibleCount} / ${total} exibidos`;
+                return;
+            }
+            const completed = gamesData.reduce((count, _game, index) => {
+                return count + (isAllChecked(getCurrentChecks(`game_${index}`)) ? 1 : 0);
+            }, 0);
+            progressText.textContent = `${completed} / ${total} concluídos`;
+        }
+
+        function clearListFilters(event) {
+            event.stopPropagation();
+            const sort = document.getElementById('sort-mode');
+            const mode = document.getElementById('check-filter-mode');
+            if (sort) sort.value = 'rank';
+            if (mode) mode.value = 'all';
+            document.querySelectorAll('#filter-checks input:checked').forEach(input => { input.checked = false; });
+            applyListView();
+        }
+
         gamesData.forEach((game, index) => {
             const gameId = 'game_' + index;
             const savedObs = stateData[gameId]?.obs !== undefined ? stateData[gameId].obs : game.obs;
@@ -2160,10 +2254,18 @@
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', html);
+            gameViewItems.push({
+                gameId,
+                rank: game.rank,
+                name: game.name,
+                element: document.getElementById(gameId)
+            });
         });
 
+        initFilterControls();
         updateSummary();
         updateToggleAllButton();
+        applyListView();
 
         function toggleGame(element, event) {
             if (event.target.closest('.action-btn')) return;
@@ -2245,6 +2347,7 @@
             writePersistedState(state);
             queueSyncGame(gameId);
             updateSummary();
+            applyListView();
         }
 
         function copyName(name, event) {
@@ -2278,6 +2381,7 @@
             writePersistedState(state);
             queueSyncGame(gameId);
             updateSummary();
+            applyListView();
         }
 
         function getCurrentState() {
@@ -2328,6 +2432,7 @@
             const pct = total === 0 ? 0 : (completed / total) * 100;
             document.getElementById('progress-fill').style.width = pct + '%';
             document.getElementById('progress-text').textContent = `${completed} / ${total} concluídos`;
+            if (gameViewItems.length) updateFilterSummary(document.querySelectorAll('.game-item:not([hidden])').length);
         }
 
         function updateState(gameId, key, value) {
@@ -2469,6 +2574,7 @@
             gameItem.style.setProperty('--progress', progress);
             updateSummary();
             updateToggleAllButton();
+            applyListView();
         }
 
         async function initRealtimeSync() {
