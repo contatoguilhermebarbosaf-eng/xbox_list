@@ -1885,6 +1885,7 @@
         let syncPollInterval = null;
         let currentViewApplied = false;
         const syncTimers = new Map();
+        const textSyncTimers = new Map();
 
         function readPersistedState() {
             try {
@@ -2410,9 +2411,8 @@
             gameItem.classList.toggle('listed', state[gameId].listed);
             stateData[gameId] = state[gameId];
             writePersistedState(state);
-            queueSyncGame(gameId);
+            queueTextSyncGame(gameId);
             updateSummary();
-            applyListView();
         }
 
         function getCurrentState() {
@@ -2484,6 +2484,14 @@
                 syncTimers.delete(gameId);
                 syncGameToRemote(gameId);
             }, 650));
+        }
+
+        function queueTextSyncGame(gameId) {
+            clearTimeout(textSyncTimers.get(gameId));
+            textSyncTimers.set(gameId, setTimeout(() => {
+                textSyncTimers.delete(gameId);
+                queueSyncGame(gameId);
+            }, 900));
         }
 
         async function syncGameToRemote(gameId) {
@@ -2599,7 +2607,9 @@
                 if (wrapper) wrapper.classList.toggle('has-lang', select.value !== 'nao');
             }
             const textarea = gameItem.querySelector('textarea');
-            if (textarea && textarea.value !== (entry.obs || '')) textarea.value = entry.obs || '';
+            if (textarea && document.activeElement !== textarea && textarea.value !== (entry.obs || '')) {
+                textarea.value = entry.obs || '';
+            }
             const progress = checkedCount(checks) / CHECK_STEPS.length;
             gameItem.classList.toggle('listed', isAllChecked(checks));
             gameItem.style.setProperty('--progress', progress);
