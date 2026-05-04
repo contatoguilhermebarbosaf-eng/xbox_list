@@ -25,6 +25,10 @@
             <div class="dashboard">
                 <div class="stats-grid" id="stats-summary" aria-live="polite"></div>
                 <div class="filter-panel" aria-label="Filtros da lista">
+                    <label class="filter-field search-field">
+                        <span>Buscar</span>
+                        <input id="search-query" type="search" placeholder="Nome ou Title ID" oninput="applyListView()">
+                    </label>
                     <label class="filter-field">
                         <span>Ordem</span>
                         <select id="sort-mode" onchange="applyListView()">
@@ -50,16 +54,7 @@
                         <span class="material-icons">unfold_more</span>
                         <span>Mostrar obs</span>
                     </button>
-                    <button class="action-btn toolbar-btn" onclick="exportState(event)" title="Exportar progresso (JSON)">
-                        <span class="material-icons">download</span>
-                        <span>Exportar</span>
-                    </button>
-                    <button class="action-btn toolbar-btn" onclick="document.getElementById('import-file').click()" title="Importar progresso (JSON)">
-                        <span class="material-icons">upload</span>
-                        <span>Importar</span>
-                    </button>
                     <span class="sync-status" id="sync-status" title="Estado da sincronização">Local</span>
-                    <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importState(event)">
                 </div>
             </div>
         </div>
@@ -2137,6 +2132,12 @@
         }
 
         function gameMatchesFilters(gameId) {
+            const item = gameViewItems.find(game => game.gameId === gameId);
+            const query = _normalize(document.getElementById('search-query')?.value || '');
+            if (query && item) {
+                const haystack = _normalize(`${item.rank} ${item.name} ${item.titleId || ''}`);
+                if (!haystack.includes(query)) return false;
+            }
             const selected = getSelectedFilterChecks();
             if (selected.length === 0) return true;
             const mode = document.getElementById('check-filter-mode')?.value || 'all';
@@ -2169,7 +2170,8 @@
         function updateFilterSummary(visibleCount) {
             const total = gameViewItems.length;
             const selected = getSelectedFilterChecks();
-            const hasFilter = selected.length > 0 || (document.getElementById('sort-mode')?.value || 'rank') !== 'rank';
+            const hasSearch = (document.getElementById('search-query')?.value || '').trim() !== '';
+            const hasFilter = hasSearch || selected.length > 0 || (document.getElementById('sort-mode')?.value || 'rank') !== 'rank';
             const progressText = document.getElementById('progress-text');
             if (!progressText) return;
             if (hasFilter) {
@@ -2186,8 +2188,10 @@
             event.stopPropagation();
             const sort = document.getElementById('sort-mode');
             const mode = document.getElementById('check-filter-mode');
+            const search = document.getElementById('search-query');
             if (sort) sort.value = 'rank';
             if (mode) mode.value = 'all';
+            if (search) search.value = '';
             document.querySelectorAll('#filter-checks input:checked').forEach(input => { input.checked = false; });
             applyListView();
         }
@@ -2258,6 +2262,7 @@
                 gameId,
                 rank: game.rank,
                 name: game.name,
+                titleId: game.titleId || '',
                 element: document.getElementById(gameId)
             });
         });
@@ -2621,47 +2626,6 @@
             toast.innerText = message;
             toast.className = "show";
             setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
-        }
-
-        function exportState(event) {
-            event.stopPropagation();
-            const state = readPersistedState();
-            const payload = { storageKey: STORAGE_KEY, exportedAt: new Date().toISOString(), state };
-            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-            a.href = url;
-            a.download = `top-300-br_${stamp}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast("Progresso exportado.");
-        }
-
-        function importState(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    const incoming = (parsed && parsed.state && typeof parsed.state === 'object') ? parsed.state : parsed;
-                    if (!incoming || typeof incoming !== 'object') throw new Error('Formato inválido.');
-                    if (!confirm('Substituir o progresso atual pelo do arquivo importado?')) {
-                        event.target.value = '';
-                        return;
-                    }
-                    writePersistedState(stampStateForSync(incoming));
-                    showToast("Progresso importado. Recarregando...");
-                    setTimeout(() => location.reload(), 700);
-                } catch (err) {
-                    showToast("Arquivo inválido: " + err.message);
-                }
-                event.target.value = '';
-            };
-            reader.readAsText(file);
         }
 
         initRealtimeSync();

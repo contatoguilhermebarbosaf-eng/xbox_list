@@ -1,26 +1,24 @@
 /* === Organizador de Jogos — shared theme === */
 
 :root {
-    /* Warm neutrals */
-    --bg-0: oklch(0.16 0.012 60);
-    --bg-1: oklch(0.20 0.014 60);
-    --bg-2: oklch(0.24 0.014 60);
-    --bg-3: oklch(0.28 0.014 60);
-    --line: oklch(0.32 0.014 60);
-    --line-strong: oklch(0.42 0.018 60);
+    --bg-0: oklch(0.13 0.018 150);
+    --bg-1: oklch(0.18 0.018 150);
+    --bg-2: oklch(0.23 0.020 150);
+    --bg-3: oklch(0.29 0.022 150);
+    --line: oklch(0.34 0.026 150);
+    --line-strong: oklch(0.47 0.040 150);
 
-    --ink-0: oklch(0.96 0.012 80);
-    --ink-1: oklch(0.78 0.012 80);
-    --ink-2: oklch(0.58 0.012 80);
-    --ink-3: oklch(0.44 0.012 80);
+    --ink-0: oklch(0.96 0.010 145);
+    --ink-1: oklch(0.80 0.014 145);
+    --ink-2: oklch(0.61 0.014 145);
+    --ink-3: oklch(0.45 0.014 145);
 
-    /* Accents — same chroma, varied hue */
-    --accent: oklch(0.78 0.14 65);          /* warm amber */
-    --accent-soft: oklch(0.78 0.14 65 / 0.16);
-    --accent-line: oklch(0.78 0.14 65 / 0.40);
-    --success: oklch(0.78 0.14 155);        /* green */
-    --success-soft: oklch(0.78 0.14 155 / 0.16);
-    --info: oklch(0.78 0.14 240);           /* blue */
+    --accent: oklch(0.82 0.21 140);
+    --accent-soft: oklch(0.82 0.21 140 / 0.16);
+    --accent-line: oklch(0.82 0.21 140 / 0.42);
+    --success: oklch(0.78 0.18 150);
+    --success-soft: oklch(0.78 0.18 150 / 0.16);
+    --info: oklch(0.75 0.12 205);
 
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -44,8 +42,8 @@ html, body {
 body {
     font-family: var(--font-sans);
     background:
-        radial-gradient(1200px 600px at 50% -10%, oklch(0.78 0.14 65 / 0.06), transparent 60%),
-        radial-gradient(900px 500px at 90% 110%, oklch(0.78 0.14 240 / 0.04), transparent 60%),
+        radial-gradient(1200px 600px at 50% -10%, oklch(0.82 0.21 140 / 0.08), transparent 60%),
+        radial-gradient(900px 500px at 90% 110%, oklch(0.75 0.12 205 / 0.05), transparent 60%),
         var(--bg-0);
     color: var(--ink-0);
     margin: 0;
@@ -130,7 +128,7 @@ h1 .h1-accent {
 .progress-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--accent), oklch(0.82 0.14 110));
+    background: linear-gradient(90deg, var(--accent), oklch(0.86 0.18 165));
     transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -171,7 +169,7 @@ h1 .h1-accent {
 
 .stat-card.is-success {
     background: linear-gradient(180deg, var(--success-soft), transparent 80%), var(--bg-1);
-    border-color: oklch(0.78 0.14 155 / 0.40);
+    border-color: oklch(0.78 0.18 150 / 0.40);
 }
 
 .stat-value {
@@ -239,6 +237,34 @@ h1 .h1-accent {
     font-size: 0.78rem;
     font-weight: 600;
     padding: 6px 8px;
+}
+
+.search-field {
+    grid-column: 1 / -1;
+}
+
+.search-field input {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg-0);
+    color: var(--ink-0);
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 8px 10px;
+}
+
+.search-field input::placeholder {
+    color: var(--ink-3);
+}
+
+.search-field input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
 .filter-field select:focus {
@@ -334,7 +360,7 @@ h1 .h1-accent {
 
 .sync-status[data-mode="online"] {
     color: var(--success);
-    border-color: oklch(0.78 0.14 155 / 0.40);
+    border-color: oklch(0.78 0.18 150 / 0.40);
     background: var(--success-soft);
 }
 
@@ -385,7 +411,8 @@ h1 .h1-accent {
 
 button,
 select,
-textarea {
+textarea,
+input {
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -629,7 +656,7 @@ textarea {
 /* Listed (all 5 checks done) */
 .game-item.listed {
     background: linear-gradient(180deg, var(--success-soft), transparent 30%), var(--bg-1);
-    border-color: oklch(0.78 0.14 155 / 0.30);
+    border-color: oklch(0.78 0.18 150 / 0.30);
 }
 
 .game-item.listed .game-name {
