@@ -1883,6 +1883,7 @@
         let syncReady = false;
         let applyingRemoteState = false;
         let syncPollInterval = null;
+        let currentViewApplied = false;
         const syncTimers = new Map();
 
         function readPersistedState() {
@@ -2165,8 +2166,10 @@
             applyListView(event);
         }
 
-        function applyListView(event) {
+        function applyListView(event, options = {}) {
             if (event?.stopPropagation) event.stopPropagation();
+            if (!options.silent) currentViewApplied = true;
+            const scrollY = window.scrollY;
             const sortMode = document.getElementById('sort-mode')?.value || 'rank';
             const ordered = [...gameViewItems].sort((a, b) => {
                 if (sortMode === 'alpha') {
@@ -2185,6 +2188,9 @@
             container.appendChild(fragment);
             updateFilterSummary(visibleCount);
             updateToggleAllButton();
+            if (!options.allowScrollChange) {
+                requestAnimationFrame(() => window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' }));
+            }
         }
 
         function updateFilterSummary(visibleCount) {
@@ -2290,7 +2296,7 @@
         initFilterControls();
         updateSummary();
         updateToggleAllButton();
-        applyListView();
+        applyListView(null, { silent: true });
 
         function toggleGame(element, event) {
             if (event.target.closest('.action-btn')) return;
@@ -2599,7 +2605,7 @@
             gameItem.style.setProperty('--progress', progress);
             updateSummary();
             updateToggleAllButton();
-            applyListView();
+            if (currentViewApplied && !applyingRemoteState) applyListView();
         }
 
         async function initRealtimeSync() {
