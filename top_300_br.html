@@ -27,23 +27,27 @@
                 <div class="filter-panel" aria-label="Filtros da lista">
                     <label class="filter-field search-field">
                         <span>Buscar</span>
-                        <input id="search-query" type="search" placeholder="Nome ou Title ID" oninput="applyListView()">
+                        <input id="search-query" type="search" placeholder="Nome ou Title ID" onkeydown="handleSearchKey(event)">
                     </label>
                     <label class="filter-field">
                         <span>Ordem</span>
-                        <select id="sort-mode" onchange="applyListView()">
+                        <select id="sort-mode">
                             <option value="rank">Ranking</option>
                             <option value="alpha">A-Z</option>
                         </select>
                     </label>
                     <label class="filter-field">
                         <span>Checks</span>
-                        <select id="check-filter-mode" onchange="applyListView()">
+                        <select id="check-filter-mode">
                             <option value="all">Todos marcados</option>
                             <option value="any">Qualquer marcado</option>
                         </select>
                     </label>
                     <div class="filter-checks" id="filter-checks" aria-label="Filtrar por checks"></div>
+                    <button class="action-btn apply-filter-btn" onclick="applyListView(event)" title="Aplicar pesquisa e filtros">
+                        <span class="material-icons">search</span>
+                        <span>Pesquisar</span>
+                    </button>
                     <button class="action-btn clear-filter-btn" onclick="clearListFilters(event)" title="Limpar filtros">
                         <span class="material-icons">filter_alt_off</span>
                         <span>Limpar</span>
@@ -2120,7 +2124,7 @@
             if (!filterChecks) return;
             filterChecks.innerHTML = CHECK_STEPS.map(step => `
                 <label class="filter-check" title="${step.title}">
-                    <input type="checkbox" value="${step.key}" onchange="applyListView()">
+                    <input type="checkbox" value="${step.key}">
                     <span>${step.label}</span>
                 </label>
             `).join('');
@@ -2131,11 +2135,20 @@
                 .map(input => input.value);
         }
 
+        function normalizeSearchText(text) {
+            return String(text || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+        }
+
         function gameMatchesFilters(gameId) {
             const item = gameViewItems.find(game => game.gameId === gameId);
-            const query = _normalize(document.getElementById('search-query')?.value || '');
+            const query = normalizeSearchText(document.getElementById('search-query')?.value || '');
             if (query && item) {
-                const haystack = _normalize(`${item.rank} ${item.name} ${item.titleId || ''}`);
+                const haystack = normalizeSearchText(`${item.rank} ${item.name} ${item.titleId || ''}`);
                 if (!haystack.includes(query)) return false;
             }
             const selected = getSelectedFilterChecks();
@@ -2146,7 +2159,14 @@
             return selected.every(key => !!checks[key]);
         }
 
-        function applyListView() {
+        function handleSearchKey(event) {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            applyListView(event);
+        }
+
+        function applyListView(event) {
+            if (event?.stopPropagation) event.stopPropagation();
             const sortMode = document.getElementById('sort-mode')?.value || 'rank';
             const ordered = [...gameViewItems].sort((a, b) => {
                 if (sortMode === 'alpha') {

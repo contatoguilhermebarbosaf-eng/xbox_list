@@ -311,8 +311,8 @@ h1 .h1-accent {
     background: var(--accent-soft);
 }
 
+.apply-filter-btn,
 .clear-filter-btn {
-    grid-column: 1 / -1;
     min-height: 34px;
     border: 1px solid var(--line);
     border-radius: 6px;
@@ -323,6 +323,20 @@ h1 .h1-accent {
     font-weight: 700;
 }
 
+.apply-filter-btn {
+    color: var(--accent);
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+}
+
+.apply-filter-btn:hover,
+.clear-filter-btn:hover {
+    color: var(--ink-0);
+    background: var(--bg-3);
+    border-color: var(--line-strong);
+}
+
+.apply-filter-btn .material-icons,
 .clear-filter-btn .material-icons {
     font-size: 17px;
 }
@@ -832,6 +846,7 @@ textarea:focus {
     }
 
     .filter-field select,
+    .apply-filter-btn,
     .clear-filter-btn {
         min-height: 40px;
     }
