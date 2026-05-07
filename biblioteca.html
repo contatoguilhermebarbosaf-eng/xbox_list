@@ -1319,20 +1319,24 @@
             let changed = false;
             gamesData.forEach(game => {
                 const gameId = gameIdFor(game);
-                if (!state[gameId]) { state[gameId] = {}; changed = true; }
-                if (!state[gameId].checks) { state[gameId].checks = {}; changed = true; }
-                if (state[gameId].libSeeded) return;
-                ['downloading', 'onPc'].forEach(key => {
-                    if (state[gameId].checks[key] !== true) {
-                        state[gameId].checks[key] = true;
-                        changed = true;
-                    }
-                });
+                if (state[gameId]?.libSeeded) return;
+                const entry = state[gameId];
+                const hasAnyChecks = entry?.checks && Object.values(entry.checks).some(v => v === true);
+                const hasObs = !!(entry?.obs && String(entry.obs).trim());
+                const hasLang = !!(entry?.language && entry.language !== 'nao');
+                if (entry && (hasAnyChecks || hasObs || hasLang)) {
+                    entry.libSeeded = true;
+                    changed = true;
+                    return;
+                }
+                if (!state[gameId]) state[gameId] = {};
+                if (!state[gameId].checks) state[gameId].checks = {};
+                state[gameId].checks.downloading = true;
+                state[gameId].checks.onPc = true;
                 state[gameId].libSeeded = true;
-                const obs = state[gameId].obs !== undefined ? state[gameId].obs : '';
-                state[gameId].checks = normalizeChecks(state[gameId].checks, obs);
+                state[gameId].checks = normalizeChecks(state[gameId].checks, state[gameId].obs || '');
                 state[gameId].listed = isAllChecked(state[gameId].checks);
-                state[gameId].updatedAt = state[gameId].updatedAt || nowIso();
+                state[gameId].updatedAt = nowIso();
                 changed = true;
             });
             if (changed) writePersistedState(state);
