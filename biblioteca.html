@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Biblioteca — Organizador de Jogos</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+    <div class="container" id="game-list-container">
+        <div class="sticky-dashboard">
+            <div class="title-row">
+                <div>
+                    <div class="eyebrow">Biblioteca · Xbox 360 · jogos no PC</div>
+                    <h1>Minha <span class="h1-accent">Biblioteca</span></h1>
+                </div>
+                <div class="progress-meta" aria-hidden="true">
+                    <span id="progress-text">0 / 0</span>
+                    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+                </div>
+            </div>
+            <div class="dashboard">
+                <div class="stats-grid" id="stats-summary" aria-live="polite"></div>
+                <div class="filter-panel" aria-label="Filtros da lista">
+                    <label class="filter-field search-field">
+                        <span>Buscar</span>
+                        <input id="search-query" type="search" placeholder="Nome ou Title ID" onkeydown="handleSearchKey(event)">
+                    </label>
+                    <label class="filter-field">
+                        <span>Ordem</span>
+                        <select id="sort-mode">
+                            <option value="alpha" selected>A-Z</option>
+                            <option value="size-desc">Maior tamanho</option>
+                            <option value="size-asc">Menor tamanho</option>
+                        </select>
+                    </label>
+                    <label class="filter-field">
+                        <span>Checks</span>
+                        <select id="check-filter-mode">
+                            <option value="all">Todos marcados</option>
+                            <option value="any">Qualquer marcado</option>
+                        </select>
+                    </label>
+                    <div class="filter-checks" id="filter-checks" aria-label="Filtrar por checks"></div>
+                    <button class="action-btn apply-filter-btn" onclick="applyListView(event)" title="Aplicar pesquisa e filtros">
+                        <span class="material-icons">search</span>
+                        <span>Pesquisar</span>
+                    </button>
+                    <button class="action-btn clear-filter-btn" onclick="clearListFilters(event)" title="Limpar filtros">
+                        <span class="material-icons">filter_alt_off</span>
+                        <span>Limpar</span>
+                    </button>
+                </div>
+                <div class="toolbar-actions">
+                    <button class="action-btn toolbar-btn" id="toggle-listed-filter" onclick="toggleListedFilter(event)" title="Ocultar jogos concluídos">
+                        <span class="material-icons">visibility</span>
+                        <span>Ocultar concluídos</span>
+                    </button>
+                    <button class="action-btn toolbar-btn" id="toggle-all-observations" onclick="toggleAllObservations(event)" title="Mostrar todas as observações">
+                        <span class="material-icons">unfold_more</span>
+                        <span>Mostrar obs</span>
+                    </button>
+                    <span class="sync-status" id="sync-status" title="Estado da sincronização">Local</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Copiado para a área de transferência!</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // BIBLIOTECA_GAMES_START — array gerado por atualizar_biblioteca_html.py
+        const gamesData = [
+  {
+    "name": "ALIEN ISOLATION",
+    "titleId": "5345085E",
+    "size": "13.91 GB",
+    "sizeBytes": 14935748771,
+    "format": "XEX+GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Army of Two",
+    "titleId": "454107F8",
+    "size": "5.25 GB",
+    "sizeBytes": 5637144576,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Assassin's Creed Brotherhood [PT-BR]",
+    "titleId": "5553085D",
+    "size": "8.25 GB",
+    "sizeBytes": 8858370048,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Assassin's Creed IV Black Flag [PT-BR]",
+    "titleId": "555308C2",
+    "size": "6.53 GB",
+    "sizeBytes": 7011534110,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Assassin's Creed Revelations [PT-BR]",
+    "titleId": "55530879",
+    "size": "8.30 GB",
+    "sizeBytes": 8912057139,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Assassin's Creed Rogue [PT-BR]",
+    "titleId": "555308CE",
+    "size": "6.34 GB",
+    "sizeBytes": 6807523164,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Assassin's Creed Rogue [PT-BR] (2)",
+    "titleId": "555308CE",
+    "size": "8.44 GB",
+    "sizeBytes": 9062380994,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Back to the Future The Game (2)",
+    "titleId": "443607D6",
+    "size": "3.71 GB",
+    "sizeBytes": 3983582167,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Batman Arkham Asylum",
+    "titleId": "534307F6",
+    "size": "6.96 GB",
+    "sizeBytes": 7473243095,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Batman Arkham City",
+    "titleId": "57520802",
+    "size": "9.58 GB",
+    "sizeBytes": 10286446673,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Batman Arkham Origins (Disc 1)",
+    "titleId": "57520828",
+    "size": "10.24 GB",
+    "sizeBytes": 10995116277,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Batman Arkham Origins (Disc 2)",
+    "titleId": "57520828",
+    "size": "10.24 GB",
+    "sizeBytes": 10995116277,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Batman Arkham Origins (Disco 1)",
+    "titleId": "57520828",
+    "size": "10.24 GB",
+    "sizeBytes": 10995116277,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Battlefield 4 [PT-BR] (2)",
+    "titleId": "454109BA",
+    "size": "7.70 GB",
+    "sizeBytes": 8267812044,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "BIOSHOCK 2 PT BR [PT-BR]",
+    "titleId": "54540861",
+    "size": "6.69 GB",
+    "sizeBytes": 7183332802,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "BioShock Infinite [PT-BR] (2)",
+    "titleId": "5454085D",
+    "size": "14.79 GB",
+    "sizeBytes": 15880641576,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Borderlands 2 (Add-On Installation Disc)",
+    "titleId": "5454087C",
+    "size": "5.82 GB",
+    "sizeBytes": 6249177415,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Call of Duty 4 Modern Warfare",
+    "titleId": "415607E6",
+    "size": "7.27 GB",
+    "sizeBytes": 7806103060,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Call of Duty Advanced Warfare [PT-BR]",
+    "titleId": "41560914",
+    "size": "13.82 GB",
+    "sizeBytes": 14839112007,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Call of Duty Black Ops",
+    "titleId": "41560855",
+    "size": "11.18 GB",
+    "sizeBytes": 12004433592,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Call of Duty Black Ops II",
+    "titleId": "415608C3",
+    "size": "16.03 GB",
+    "sizeBytes": 17212081438,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Call of Duty Ghosts",
+    "titleId": "415608FC",
+    "size": "10.22 GB",
+    "sizeBytes": 10973641441,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "CALL OF DUTY MODERN WARFARE 3",
+    "titleId": "415608CB",
+    "size": "10.56 GB",
+    "sizeBytes": 11338713661,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Call of Duty World at War",
+    "titleId": "4156081C",
+    "size": "6.64 GB",
+    "sizeBytes": 7129645711,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Call of Duty World at War (2)",
+    "titleId": "4156081C",
+    "size": "6.64 GB",
+    "sizeBytes": 7129645711,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Dead Space [PT-BR]",
+    "titleId": "45410857",
+    "size": "6.87 GB",
+    "sizeBytes": 7376606330,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Dead Space [PT-BR] (2)",
+    "titleId": "45410857",
+    "size": "6.88 GB",
+    "sizeBytes": 7387343749,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Destiny The Taken King Legendary Edition (2)",
+    "titleId": "415608F8",
+    "size": "7.05 GB",
+    "sizeBytes": 7569879859,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Diablo III + PT BR [PT-BR]",
+    "titleId": "394F07D4",
+    "size": "7.74 GB",
+    "sizeBytes": 8310761717,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Dragon Ball Xenoverse [PT-BR] (2)",
+    "titleId": "4E4D0862",
+    "size": "7.22 GB",
+    "sizeBytes": 7752415969,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Dragon Ball Z Budokai HD Collection",
+    "titleId": "4E4D0856",
+    "size": "4.26 GB",
+    "sizeBytes": 4574140170,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Dragon Ball Z Burst Limit",
+    "titleId": "424107DC",
+    "size": "3.33 GB",
+    "sizeBytes": 3575560273,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Dragon Ball Z Raging Blast 2",
+    "titleId": "4E4D0826",
+    "size": "5.55 GB",
+    "sizeBytes": 5959267123,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Fallout 3 [PT-BR]",
+    "titleId": "425307D5",
+    "size": "7.61 GB",
+    "sizeBytes": 8171175280,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Far Cry 2",
+    "titleId": "55530810",
+    "size": "3.78 GB",
+    "sizeBytes": 4058744094,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Far Cry 2 (2)",
+    "titleId": "55530810",
+    "size": "3.78 GB",
+    "sizeBytes": 4058744094,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Far Cry 3",
+    "titleId": "5553088C",
+    "size": "6.47 GB",
+    "sizeBytes": 6947109601,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Far Cry 3 Blood Dragon",
+    "titleId": "584113BF",
+    "size": "1.38 GB",
+    "sizeBytes": 1481763717,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Far Cry 3 Blood Dragon",
+    "titleId": "584113BF",
+    "size": "1.38 GB",
+    "sizeBytes": 1481763717,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Far Cry 4",
+    "titleId": "555308CA",
+    "size": "10.75 GB",
+    "sizeBytes": 11542724608,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "FIFA 19 PT-BR LEGACY EDITION [PT-BR]",
+    "titleId": "454109F9",
+    "size": "5.90 GB",
+    "sizeBytes": 6335076761,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Forza Horizon 2",
+    "titleId": "4D530AA4",
+    "size": "7.54 GB",
+    "sizeBytes": 8096013352,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Forza Horizon [PT-BR]",
+    "titleId": "4D5309C9",
+    "size": "7.36 GB",
+    "sizeBytes": 7902739824,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Forza Motorsport 4 Racing 2 [PT-BR]",
+    "titleId": "4D530910",
+    "size": "10.81 GB",
+    "sizeBytes": 11607149117,
+    "format": "XEX+GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Gears of War 2",
+    "titleId": "4D53082D",
+    "size": "8.13 GB",
+    "sizeBytes": 8729521029,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Gears of War 3",
+    "titleId": "4D5308AB",
+    "size": "7.63 GB",
+    "sizeBytes": 8192650117,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Grand Theft Auto Episodes from Liberty City [PT-BR]",
+    "titleId": "545407F2",
+    "size": "10.64 GB",
+    "sizeBytes": 11424613007,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Grand Theft Auto San Andreas [PT-BR]",
+    "titleId": "545408B8",
+    "size": "1.96 GB",
+    "sizeBytes": 2104533975,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Grand Theft Auto V",
+    "titleId": "545408A7",
+    "size": "17.86 GB",
+    "sizeBytes": 19177028976,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Halo 3 [PT-BR] (2)",
+    "titleId": "4D5307E6",
+    "size": "5.98 GB",
+    "sizeBytes": 6420976107,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Injustice Gods Among Us",
+    "titleId": "57520829",
+    "size": "7.98 GB",
+    "sizeBytes": 8568459755,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Left 4 Dead",
+    "titleId": "45410830",
+    "size": "3.94 GB",
+    "sizeBytes": 4230542786,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Left 4 Dead 2",
+    "titleId": "454108D4",
+    "size": "7.54 GB",
+    "sizeBytes": 8096013352,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "LEGO Batman 2 DC Super Heroes",
+    "titleId": "57520817",
+    "size": "4.29 GB",
+    "sizeBytes": 4606352424,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "LEGO Batman 2 DC Super Heroes (2)",
+    "titleId": "57520817",
+    "size": "4.29 GB",
+    "sizeBytes": 4606352424,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "LEGO Batman 3 Beyond Gotham",
+    "titleId": "57520845",
+    "size": "7.10 GB",
+    "sizeBytes": 7623566950,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "LEGO Batman 3 Beyond Gotham (2)",
+    "titleId": "57520845",
+    "size": "7.10 GB",
+    "sizeBytes": 7623566950,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Lost Planet Extreme Condition Colonies Edition",
+    "titleId": "434307DE",
+    "size": "6.91 GB",
+    "sizeBytes": 7419556003,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Mass Effect 2 [PT-BR] (2)",
+    "titleId": "454108CE",
+    "size": "18.28 GB",
+    "sizeBytes": 19628000542,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "MAX PAYNE 3 - DISCO 2 [PT-BR]",
+    "titleId": "5454086B",
+    "size": "15.43 GB",
+    "sizeBytes": 16567836344,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Metal Gear Rising Revengeance [PT-BR]",
+    "titleId": "4B4E080A",
+    "size": "10.07 GB",
+    "sizeBytes": 10812580167,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Metal Gear Rising Revengeance [PT-BR] (2)",
+    "titleId": "4B4E080A",
+    "size": "10.07 GB",
+    "sizeBytes": 10812580167,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Minecraft",
+    "titleId": "584111F7",
+    "size": "1.97 GB",
+    "sizeBytes": 2115271393,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Minecraft - Story Mode",
+    "titleId": "5841149E",
+    "size": "5.69 GB",
+    "sizeBytes": 6109590978,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Minecraft Story Mode - Season One [PT-BR]",
+    "titleId": "443607DC",
+    "size": "285.12 MB",
+    "sizeBytes": 298969989,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Mortal Kombat Komplete",
+    "titleId": "575207FD",
+    "size": "7.10 GB",
+    "sizeBytes": 7623566950,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Mortal Kombat vs. DC Universe",
+    "titleId": "4D5707E9",
+    "size": "6.27 GB",
+    "sizeBytes": 6732361236,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Naruto Shippuden Ultimate Ninja Storm 2 [PT-BR]",
+    "titleId": "4E4D0819",
+    "size": "3.20 GB",
+    "sizeBytes": 3435973836,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Naruto Shippuden Ultimate Ninja Storm Revolution",
+    "titleId": "4E4D0868",
+    "size": "10.49 GB",
+    "sizeBytes": 11263551733,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Need for Speed Hot Pursuit",
+    "titleId": "45410903",
+    "size": "6.82 GB",
+    "sizeBytes": 7322919239,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Need for Speed Most Wanted (2005) [PT-BR]",
+    "titleId": "454107D9",
+    "size": "5.94 GB",
+    "sizeBytes": 6378026434,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Need for Speed Shift",
+    "titleId": "454108B4",
+    "size": "3.90 GB",
+    "sizeBytes": 4187593113,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Need for Speed Shift (2)",
+    "titleId": "454108B4",
+    "size": "844.16 MB",
+    "sizeBytes": 885165916,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "PES BRAZUKAS 2026",
+    "titleId": "4B4E084C",
+    "size": "7.37 GB",
+    "sizeBytes": 7913477242,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Portal 2",
+    "titleId": "45410912",
+    "size": "4.82 GB",
+    "sizeBytes": 5175435591,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Portal 2 (2)",
+    "titleId": "45410912",
+    "size": "4.82 GB",
+    "sizeBytes": 5175435591,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Prison Architect",
+    "titleId": "584114B0",
+    "size": "212.81 MB",
+    "sizeBytes": 223147458,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Red Dead Redemption™ GOTY Edition PT BR",
+    "titleId": "5454082B",
+    "size": "14.20 GB",
+    "sizeBytes": 15247133900,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Resident Evil 4 [PT-BR]",
+    "titleId": "4343081C",
+    "size": "3.76 GB",
+    "sizeBytes": 4037269258,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Resident Evil 5 [PT-BR]",
+    "titleId": "434307D4",
+    "size": "7.03 GB",
+    "sizeBytes": 7548405022,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Resident Evil 6",
+    "titleId": "43430819",
+    "size": "8.38 GB",
+    "sizeBytes": 8997956485,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Resident Evil HD Remaster [PT-BR]",
+    "titleId": "43430841",
+    "size": "6.19 GB",
+    "sizeBytes": 6646461890,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Resident Evil HD Remaster [PT-BR] (2)",
+    "titleId": "43430841",
+    "size": "6.19 GB",
+    "sizeBytes": 6646461890,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Skate 3",
+    "titleId": "454108E6",
+    "size": "6.26 GB",
+    "sizeBytes": 6721623818,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Sleeping Dogs [PT-BR] (2)",
+    "titleId": "53510811",
+    "size": "12.60 GB",
+    "sizeBytes": 13529146982,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Sniper Elite V2 [PT-BR]",
+    "titleId": "464F07E8",
+    "size": "4.98 GB",
+    "sizeBytes": 5347234283,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Sniper Elite V2 [PT-BR] (2)",
+    "titleId": "464F07E8",
+    "size": "4.98 GB",
+    "sizeBytes": 5347234283,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Street Fighter III - Online Edition",
+    "titleId": "58410B16",
+    "size": "737.36 MB",
+    "sizeBytes": 773177999,
+    "format": "GOD",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Street Fighter X Tekken",
+    "titleId": "4343080F",
+    "size": "5.81 GB",
+    "sizeBytes": 6238439997,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Tekken 6",
+    "titleId": "4E4D07FC",
+    "size": "6.92 GB",
+    "sizeBytes": 7430293422,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Tekken 6 (2)",
+    "titleId": "4E4D07FC",
+    "size": "6.92 GB",
+    "sizeBytes": 7430293422,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Tekken Tag Tournament 2 (2)",
+    "titleId": "4E4D0859",
+    "size": "16.24 GB",
+    "sizeBytes": 17437567221,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "THE ELDER SCROLLS IV OBLIVION PT-BR [PT-BR] (2)",
+    "titleId": "425307D1",
+    "size": "7.34 GB",
+    "sizeBytes": 7881264988,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Tomb Raider [PT-BR]",
+    "titleId": "53510802",
+    "size": "6.85 GB",
+    "sizeBytes": 7355131494,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "UFC Undisputed 2010",
+    "titleId": "54510851",
+    "size": "6.39 GB",
+    "sizeBytes": 6861210255,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Ultra Street Fighter IV",
+    "titleId": "434307FC",
+    "size": "7.84 GB",
+    "sizeBytes": 8418135900,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "Volta Football Abril 2026",
+    "titleId": "4541097B",
+    "size": "6.78 GB",
+    "sizeBytes": 7279969566,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  },
+  {
+    "name": "WWE All Stars (2)",
+    "titleId": "54510866",
+    "size": "6.16 GB",
+    "sizeBytes": 6614249635,
+    "format": "XEX",
+    "ready": true,
+    "installed": false,
+    "ptbr": false,
+    "obs": ""
+  }
+];
+        // BIBLIOTECA_GAMES_END
+
+        const STORAGE_KEY = 'gameState';
+        const LEGACY_STORAGE_KEY = 'top300GameState';
+
+        function gameIdFor(game) {
+            const tid = (game?.titleId || '').toUpperCase();
+            if (tid) return 'game_' + tid;
+            const slug = String(game?.name || '').normalize('NFD')
+                .replace(/[̀-ͯ]/g, '').toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+            return 'game_lib_' + (slug || 'sem_titulo');
+        }
+        const SYNC_CONFIG = {
+            supabaseUrl: 'https://wfxisigpgvyxlammldty.supabase.co',
+            supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmeGlzaWdwZ3Z5eGxhbW1sZHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MzY3MzIsImV4cCI6MjA5MzQxMjczMn0.yirxpKMbov9U8RFiU7d4b5oSvapm5ZljyNWDye7xzl0',
+            tableName: 'top300_state',
+            listId: 'default'
+        };
+
+        let syncClient = null;
+        let syncReady = false;
+        let applyingRemoteState = false;
+        let syncPollInterval = null;
+        let currentViewApplied = false;
+        const syncTimers = new Map();
+        const textSyncTimers = new Map();
+
+        function readPersistedState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (err) {
+                console.error('Falha ao ler progresso salvo:', err);
+                return {};
+            }
+        }
+
+        function writePersistedState(state) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                return true;
+            } catch (err) {
+                console.error('Falha ao salvar progresso:', err);
+                showToast('Não foi possível salvar o progresso neste navegador.');
+                return false;
+            }
+        }
+
+        function isSyncConfigured() {
+            return !!(SYNC_CONFIG.supabaseUrl && SYNC_CONFIG.supabaseAnonKey);
+        }
+
+        function setSyncStatus(text, mode = 'local') {
+            const el = document.getElementById('sync-status');
+            if (!el) return;
+            el.textContent = text;
+            el.dataset.mode = mode;
+        }
+
+        function nowIso() {
+            return new Date().toISOString();
+        }
+
+        function getEntryTime(entry, fallback = '') {
+            const raw = entry?.updatedAt || fallback || '';
+            const parsed = Date.parse(raw);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function normalizeEntry(entry = {}, defaultObs = '') {
+            const obs = entry.obs !== undefined ? String(entry.obs) : defaultObs;
+            const checks = normalizeChecks(entry.checks || {}, obs);
+            return {
+                ...entry,
+                obs,
+                checks,
+                language: normalizeLanguage(entry.language),
+                listed: isAllChecked(checks),
+                updatedAt: entry.updatedAt || ''
+            };
+        }
+
+        function stampStateForSync(state) {
+            const stamp = nowIso();
+            Object.keys(state).forEach(gameId => {
+                state[gameId] = normalizeEntry(state[gameId]);
+                state[gameId].updatedAt = stamp;
+            });
+            return state;
+        }
+
+        const container = document.getElementById('game-list-container');
+
+        const savedStates = readPersistedState();
+
+        const CHECK_STEPS = [
+            { key: 'downloading',  label: 'Baixando',      title: 'Baixando' },
+            { key: 'onPc',         label: 'No PC',         title: 'No PC' },
+            { key: 'onHd',         label: 'No HD',         title: 'No HD' },
+            { key: 'tested',       label: 'Testado',       title: 'Testado' },
+            { key: 'obsReviewed',  label: 'Obs revisada',  title: 'Observação revisada' }
+        ];
+
+        const FINAL_CHECK_KEY = 'obsReviewed';
+        const gameViewItems = [];
+        const LANGUAGE_OPTIONS = [
+            { value: 'nao', label: 'NÃO' },
+            { value: 'legendado', label: 'Legendado' },
+            { value: 'dublado', label: 'Dublado' }
+        ];
+
+        function normalizeChecks(checks, obs = '') {
+            const normalized = {
+                downloading: !!(checks.downloading ?? checks.downloaded),
+                onPc:        !!(checks.onPc ?? checks.installed),
+                onHd:        !!checks.onHd,
+                tested:      !!checks.tested,
+                obsReviewed: !!(checks.obsReviewed ?? checks.finished)
+            };
+            if (obs.trim() !== '') normalized.obsReviewed = false;
+            return normalized;
+        }
+
+        function normalizeLanguage(value) {
+            return LANGUAGE_OPTIONS.some(option => option.value === value) ? value : 'nao';
+        }
+
+        function migrateLegacyState(state) {
+            let changed = false;
+            Object.keys(state).forEach(id => {
+                const entry = state[id];
+                if (entry && entry.listed === true && entry.checks === undefined) {
+                    const obs = entry.obs !== undefined ? entry.obs : '';
+                    entry.checks = normalizeChecks({
+                        downloaded: true, installed: true, tested: true,
+                        finished: obs.trim() === ''
+                    }, obs);
+                    entry.listed = isAllChecked(entry.checks);
+                    changed = true;
+                } else if (entry && entry.checks) {
+                    const obs = entry.obs !== undefined ? entry.obs : '';
+                    const normalized = normalizeChecks(entry.checks, obs);
+                    const normalizedChanged = CHECK_STEPS.some(step => entry.checks[step.key] !== normalized[step.key]);
+                    if (normalizedChanged || entry.listed !== isAllChecked(normalized)) {
+                        entry.checks = normalized;
+                        entry.listed = isAllChecked(normalized);
+                        changed = true;
+                    }
+                }
+                if (entry && entry.language !== normalizeLanguage(entry.language)) {
+                    entry.language = normalizeLanguage(entry.language);
+                    changed = true;
+                }
+            });
+            if (changed) writePersistedState(state);
+            return state;
+        }
+
+        let stateData = migrateLegacyState(savedStates);
+
+        function seedBibliotecaState(state) {
+            let changed = false;
+            gamesData.forEach(game => {
+                const gameId = gameIdFor(game);
+                if (!state[gameId]) { state[gameId] = {}; changed = true; }
+                if (!state[gameId].checks) { state[gameId].checks = {}; changed = true; }
+                if (state[gameId].libSeeded) return;
+                ['downloading', 'onPc'].forEach(key => {
+                    if (state[gameId].checks[key] !== true) {
+                        state[gameId].checks[key] = true;
+                        changed = true;
+                    }
+                });
+                state[gameId].libSeeded = true;
+                const obs = state[gameId].obs !== undefined ? state[gameId].obs : '';
+                state[gameId].checks = normalizeChecks(state[gameId].checks, obs);
+                state[gameId].listed = isAllChecked(state[gameId].checks);
+                state[gameId].updatedAt = state[gameId].updatedAt || nowIso();
+                changed = true;
+            });
+            if (changed) writePersistedState(state);
+            return state;
+        }
+
+        stateData = seedBibliotecaState(stateData);
+
+        function getChecks(gameId, defaultObs = '') {
+            const checks = stateData[gameId]?.checks || {};
+            const obs = stateData[gameId]?.obs !== undefined ? stateData[gameId].obs : defaultObs;
+            return normalizeChecks(checks, obs);
+        }
+
+        function isAllChecked(checks) {
+            return CHECK_STEPS.every(step => !!checks[step.key]);
+        }
+
+        function checkedCount(checks) {
+            return CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0);
+        }
+
+        function initFilterControls() {
+            const filterChecks = document.getElementById('filter-checks');
+            if (!filterChecks) return;
+            filterChecks.innerHTML = CHECK_STEPS.map(step => `
+                <label class="filter-check" title="${step.title}">
+                    <input type="checkbox" value="${step.key}">
+                    <span>${step.label}</span>
+                </label>
+            `).join('');
+        }
+
+        function getSelectedFilterChecks() {
+            return Array.from(document.querySelectorAll('#filter-checks input:checked'))
+                .map(input => input.value);
+        }
+
+        function normalizeSearchText(text) {
+            return String(text || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+        }
+
+        const HIDE_LISTED_PREF_KEY = 'bibliotecaHideListed';
+
+        function loadHideListedPref() {
+            return localStorage.getItem(HIDE_LISTED_PREF_KEY) === '1';
+        }
+
+        function saveHideListedPref(hide) {
+            localStorage.setItem(HIDE_LISTED_PREF_KEY, hide ? '1' : '0');
+        }
+
+        function updateHideListedButton() {
+            const btn = document.getElementById('toggle-listed-filter');
+            if (!btn) return;
+            const hide = loadHideListedPref();
+            btn.classList.toggle('is-active', hide);
+            btn.title = hide ? 'Mostrar jogos concluídos' : 'Ocultar jogos concluídos';
+            const icon = btn.querySelector('.material-icons');
+            if (icon) icon.innerText = hide ? 'visibility_off' : 'visibility';
+            const label = btn.querySelector('span:last-child');
+            if (label) label.innerText = hide ? 'Mostrar concluídos' : 'Ocultar concluídos';
+        }
+
+        function toggleListedFilter(event) {
+            if (event?.stopPropagation) event.stopPropagation();
+            saveHideListedPref(!loadHideListedPref());
+            updateHideListedButton();
+            applyListView(event);
+        }
+
+        function gameMatchesFilters(gameId) {
+            const item = gameViewItems.find(game => game.gameId === gameId);
+            const query = normalizeSearchText(document.getElementById('search-query')?.value || '');
+            if (query && item) {
+                const haystack = normalizeSearchText(`${item.name} ${item.titleId || ''}`);
+                if (!haystack.includes(query)) return false;
+            }
+            if (loadHideListedPref() && isAllChecked(getCurrentChecks(gameId))) return false;
+            const selected = getSelectedFilterChecks();
+            if (selected.length === 0) return true;
+            const mode = document.getElementById('check-filter-mode')?.value || 'all';
+            const checks = getCurrentChecks(gameId);
+            if (mode === 'any') return selected.some(key => !!checks[key]);
+            return selected.every(key => !!checks[key]);
+        }
+
+        function handleSearchKey(event) {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            applyListView(event);
+        }
+
+        function applyListView(event, options = {}) {
+            if (event?.stopPropagation) event.stopPropagation();
+            if (!options.silent) currentViewApplied = true;
+            const scrollY = window.scrollY;
+            const sortMode = document.getElementById('sort-mode')?.value || 'alpha';
+            const ordered = [...gameViewItems].sort((a, b) => {
+                if (sortMode === 'size-desc') {
+                    return (b.sizeBytes || 0) - (a.sizeBytes || 0)
+                        || a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+                }
+                if (sortMode === 'size-asc') {
+                    return (a.sizeBytes || 0) - (b.sizeBytes || 0)
+                        || a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+                }
+                return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+            });
+            const fragment = document.createDocumentFragment();
+            let visibleCount = 0;
+            ordered.forEach(item => {
+                const visible = gameMatchesFilters(item.gameId);
+                item.element.hidden = !visible;
+                if (visible) visibleCount += 1;
+                fragment.appendChild(item.element);
+            });
+            container.appendChild(fragment);
+            updateFilterSummary(visibleCount);
+            updateToggleAllButton();
+            if (!options.allowScrollChange) {
+                requestAnimationFrame(() => window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' }));
+            }
+        }
+
+        function updateFilterSummary(visibleCount) {
+            const total = gameViewItems.length;
+            const selected = getSelectedFilterChecks();
+            const hasSearch = (document.getElementById('search-query')?.value || '').trim() !== '';
+            const hasFilter = hasSearch || selected.length > 0 || (document.getElementById('sort-mode')?.value || 'alpha') !== 'alpha';
+            const progressText = document.getElementById('progress-text');
+            if (!progressText) return;
+            if (hasFilter) {
+                progressText.textContent = `${visibleCount} / ${total} exibidos`;
+                return;
+            }
+            const completed = gamesData.reduce((count, game) => {
+                return count + (isAllChecked(getCurrentChecks(gameIdFor(game))) ? 1 : 0);
+            }, 0);
+            progressText.textContent = `${completed} / ${total} concluídos`;
+        }
+
+        function clearListFilters(event) {
+            event.stopPropagation();
+            const sort = document.getElementById('sort-mode');
+            const mode = document.getElementById('check-filter-mode');
+            const search = document.getElementById('search-query');
+            if (sort) sort.value = 'alpha';
+            if (mode) mode.value = 'all';
+            if (search) search.value = '';
+            document.querySelectorAll('#filter-checks input:checked').forEach(input => { input.checked = false; });
+            saveHideListedPref(false);
+            updateHideListedButton();
+            applyListView();
+        }
+
+        gamesData.forEach((game) => {
+            const gameId = gameIdFor(game);
+            const savedObs = stateData[gameId]?.obs !== undefined ? stateData[gameId].obs : game.obs;
+            const checks = getChecks(gameId, savedObs);
+            const language = normalizeLanguage(stateData[gameId]?.language);
+            const allDone = isAllChecked(checks);
+            const progress = checkedCount(checks) / CHECK_STEPS.length;
+
+            const renderCheckButton = step => {
+                const on = checks[step.key];
+                return `
+                    <button class="action-btn check-btn ${on ? 'checked' : ''}"
+                            onclick="toggleCheck(this, '${gameId}', '${step.key}', event)"
+                            title="${step.title}">
+                        <span class="material-icons">${on ? 'check_circle' : 'radio_button_unchecked'}</span>
+                        <span class="check-label">${step.label}</span>
+                    </button>
+                `;
+            };
+
+            const languageOptionsHtml = LANGUAGE_OPTIONS.map(option => `
+                <option value="${option.value}" ${language === option.value ? 'selected' : ''}>${option.label}</option>
+            `).join('');
+
+            const hasLang = language !== 'nao' ? 'has-lang' : '';
+            const languageHtml = `
+                <label class="language-select-container ${hasLang}" title="Idioma">
+                    <span class="language-label">Idioma</span>
+                    <select class="language-select" onclick="event.stopPropagation()" onchange="saveLanguage('${gameId}', this.value, event)">
+                        ${languageOptionsHtml}
+                    </select>
+                </label>
+            `;
+            const controlsHtml = [
+                ...CHECK_STEPS.filter(step => step.key !== FINAL_CHECK_KEY).map(renderCheckButton),
+                languageHtml,
+                renderCheckButton(CHECK_STEPS.find(step => step.key === FINAL_CHECK_KEY))
+            ].join('');
+
+            const safeName = game.name.replace(/'/g, "\\'");
+            const tid = game.titleId || 'sem registro';
+            const sizeLabel = game.size ? ` · ${game.size}` : '';
+            const formatLabel = game.format ? ` · ${game.format}` : '';
+
+            const html = `
+                <div class="game-item ${allDone ? 'listed' : ''}" id="${gameId}" style="--progress:${progress}">
+                    <div class="game-header" onclick="toggleGame(this, event)">
+                        <div class="game-title-container">
+                            <div class="checks-group">${controlsHtml}</div>
+                            <span class="game-info">
+                                <span class="game-name">${game.name}</span>
+                                <span class="title-id"><span class="title-id-key">Title ID</span>${tid}${sizeLabel}${formatLabel}</span>
+                            </span>
+                        </div>
+                        <button class="action-btn copy-btn" onclick="copyName('${safeName}', event)" title="Copiar Nome">
+                            <span class="material-icons">content_copy</span>
+                        </button>
+                    </div>
+                    <div class="observations">
+                        <textarea placeholder="Adicione suas observações aqui..." oninput="saveText('${gameId}', this.value, this)">${savedObs}</textarea>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            gameViewItems.push({
+                gameId,
+                name: game.name,
+                titleId: game.titleId || '',
+                sizeBytes: Number(game.sizeBytes) || 0,
+                element: document.getElementById(gameId)
+            });
+        });
+
+        initFilterControls();
+        updateHideListedButton();
+        updateSummary();
+        updateToggleAllButton();
+        applyListView(null, { silent: true });
+
+        function toggleGame(element, event) {
+            if (event.target.closest('.action-btn')) return;
+            const obsDiv = element.nextElementSibling;
+            obsDiv.classList.toggle('expanded');
+            updateToggleAllButton();
+        }
+
+        function toggleAllObservations(event) {
+            event.stopPropagation();
+            const observations = Array.from(document.querySelectorAll('.observations'));
+            const observationsWithText = observations.filter(hasObservationText);
+            if (observationsWithText.length === 0) {
+                observations.forEach(obs => obs.classList.remove('expanded'));
+                updateToggleAllButton();
+                showToast("Nenhum jogo com observações.");
+                return;
+            }
+            const shouldExpand = observationsWithText.some(obs => !obs.classList.contains('expanded'));
+            observations.forEach(obs => {
+                obs.classList.toggle('expanded', shouldExpand && hasObservationText(obs));
+            });
+            updateToggleAllButton();
+        }
+
+        function updateToggleAllButton() {
+            const button = document.getElementById('toggle-all-observations');
+            const observations = Array.from(document.querySelectorAll('.observations'));
+            const observationsWithText = observations.filter(hasObservationText);
+            const allExpanded = observationsWithText.length > 0 && observationsWithText.every(obs => obs.classList.contains('expanded'));
+            button.title = allExpanded ? 'Colapsar observações preenchidas' : 'Mostrar observações preenchidas';
+            button.querySelector('.material-icons').innerText = allExpanded ? 'unfold_less' : 'unfold_more';
+            button.querySelector('span:last-child').innerText = allExpanded ? 'Colapsar obs' : 'Mostrar obs';
+        }
+
+        function hasObservationText(obsDiv) {
+            const textarea = obsDiv.querySelector('textarea');
+            return !!textarea && textarea.value.trim() !== '';
+        }
+
+        function saveLanguage(gameId, value, event) {
+            event.stopPropagation();
+            const normalized = normalizeLanguage(value);
+            updateState(gameId, 'language', normalized);
+            const select = event.target;
+            const container = select.closest('.language-select-container');
+            if (container) container.classList.toggle('has-lang', normalized !== 'nao');
+            updateSummary();
+        }
+
+        function toggleCheck(btn, gameId, stepKey, event) {
+            event.stopPropagation();
+            const gameItem = btn.closest('.game-item');
+            const textarea = gameItem.querySelector('textarea');
+            const nowOn = !btn.classList.contains('checked');
+            if (stepKey === FINAL_CHECK_KEY && nowOn && textarea.value.trim() !== '') {
+                const obsDiv = gameItem.querySelector('.observations');
+                obsDiv.classList.add('expanded');
+                textarea.focus();
+                showToast("Limpe as observações antes de marcar Obs revisada.");
+                return;
+            }
+            btn.classList.toggle('checked', nowOn);
+            btn.querySelector('.material-icons').innerText = nowOn ? 'check_circle' : 'radio_button_unchecked';
+
+            let state = readPersistedState();
+            if (!state[gameId]) state[gameId] = {};
+            if (!state[gameId].checks) state[gameId].checks = {};
+            state[gameId].checks[stepKey] = nowOn;
+            state[gameId] = normalizeEntry(state[gameId]);
+            state[gameId].updatedAt = nowIso();
+            const checks = state[gameId].checks;
+            const allDone = CHECK_STEPS.every(step => !!checks[step.key]);
+            const progress = CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0) / CHECK_STEPS.length;
+            state[gameId].listed = allDone;
+            stateData[gameId] = state[gameId];
+            gameItem.classList.toggle('listed', allDone);
+            gameItem.style.setProperty('--progress', progress);
+            writePersistedState(state);
+            queueSyncGame(gameId);
+            updateSummary();
+            applyListView();
+        }
+
+        function copyName(name, event) {
+            event.stopPropagation();
+            navigator.clipboard.writeText(name).then(() => {
+                showToast("Copiado: " + name);
+            }).catch(err => { console.error('Failed to copy: ', err); });
+        }
+
+        function saveText(gameId, text, textarea) {
+            updateToggleAllButton();
+            const gameItem = textarea.closest('.game-item');
+            const finalBtn = gameItem.querySelector(`.check-btn[onclick*="'${FINAL_CHECK_KEY}'"]`);
+            let state = readPersistedState();
+            if (!state[gameId]) state[gameId] = {};
+            if (!state[gameId].checks) state[gameId].checks = {};
+            state[gameId].obs = text;
+            if (text.trim() !== '' && finalBtn && finalBtn.classList.contains('checked')) {
+                finalBtn.classList.remove('checked');
+                finalBtn.querySelector('.material-icons').innerText = 'radio_button_unchecked';
+                gameItem.classList.remove('listed');
+                state[gameId].checks[FINAL_CHECK_KEY] = false;
+            }
+            state[gameId] = normalizeEntry(state[gameId]);
+            state[gameId].updatedAt = nowIso();
+            const checks = state[gameId].checks;
+            const progress = CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0) / CHECK_STEPS.length;
+            gameItem.style.setProperty('--progress', progress);
+            gameItem.classList.toggle('listed', state[gameId].listed);
+            stateData[gameId] = state[gameId];
+            writePersistedState(state);
+            queueTextSyncGame(gameId);
+            scheduleSummaryUpdate();
+        }
+
+        function getCurrentState() {
+            return readPersistedState();
+        }
+
+        function getCurrentChecks(gameId) {
+            const state = getCurrentState();
+            const entry = state[gameId] || {};
+            const textarea = document.querySelector(`#${gameId} textarea`);
+            const obs = entry.obs !== undefined ? entry.obs : (textarea ? textarea.value : '');
+            return normalizeChecks(entry.checks || {}, obs);
+        }
+
+        let summaryItemsLayout = null;
+        let summaryValueNodes = null;
+
+        function buildSummaryLayout() {
+            const stats = CHECK_STEPS.map(step => ({ key: step.key, label: step.label }));
+            const items = [
+                { label: 'Jogos na lista', kind: 'primary' },
+                ...stats.map(stat => ({ label: stat.label, statKey: stat.key })),
+                { label: 'Legendado', langKey: 'legendado' },
+                { label: 'Dublado', langKey: 'dublado' },
+                { label: 'Concluídos', kind: 'success', completed: true }
+            ];
+            const target = document.getElementById('stats-summary');
+            target.innerHTML = items.map(item => {
+                const cls = item.kind === 'primary' ? 'is-primary' : item.kind === 'success' ? 'is-success' : '';
+                return `
+                    <div class="stat-card ${cls}">
+                        <span class="stat-value">0</span>
+                        <span class="stat-label" title="${item.label}">${item.label}</span>
+                    </div>
+                `;
+            }).join('');
+            summaryItemsLayout = items;
+            summaryValueNodes = Array.from(target.querySelectorAll('.stat-value'));
+        }
+
+        function updateSummary() {
+            if (!summaryItemsLayout) buildSummaryLayout();
+
+            const state = readPersistedState();
+            const counts = {};
+            CHECK_STEPS.forEach(step => { counts[step.key] = 0; });
+            const languageStats = { legendado: 0, dublado: 0 };
+            let completed = 0;
+
+            for (let i = 0; i < gamesData.length; i++) {
+                const gameId = gameIdFor(gamesData[i]);
+                const entry = state[gameId] || {};
+                const obs = entry.obs !== undefined ? entry.obs : (gamesData[i].obs || '');
+                const checks = normalizeChecks(entry.checks || {}, obs);
+                for (let j = 0; j < CHECK_STEPS.length; j++) {
+                    if (checks[CHECK_STEPS[j].key]) counts[CHECK_STEPS[j].key] += 1;
+                }
+                const language = normalizeLanguage(entry.language);
+                if (languageStats[language] !== undefined) languageStats[language] += 1;
+                if (isAllChecked(checks)) completed += 1;
+            }
+
+            for (let i = 0; i < summaryItemsLayout.length; i++) {
+                const item = summaryItemsLayout[i];
+                let value;
+                if (item.kind === 'primary') value = gamesData.length;
+                else if (item.completed) value = completed;
+                else if (item.statKey) value = counts[item.statKey];
+                else if (item.langKey) value = languageStats[item.langKey];
+                else value = 0;
+                const node = summaryValueNodes[i];
+                const str = String(value);
+                if (node.textContent !== str) node.textContent = str;
+            }
+
+            const total = gamesData.length;
+            const pct = total === 0 ? 0 : (completed / total) * 100;
+            const fill = document.getElementById('progress-fill');
+            const fillStr = pct + '%';
+            if (fill.style.width !== fillStr) fill.style.width = fillStr;
+            const progText = document.getElementById('progress-text');
+            const txt = `${completed} / ${total} concluídos`;
+            if (progText.textContent !== txt) progText.textContent = txt;
+            if (gameViewItems.length) updateFilterSummary(document.querySelectorAll('.game-item:not([hidden])').length);
+        }
+
+        let summaryDebounceId = null;
+        function scheduleSummaryUpdate() {
+            if (summaryDebounceId !== null) return;
+            summaryDebounceId = setTimeout(() => {
+                summaryDebounceId = null;
+                updateSummary();
+            }, 220);
+        }
+
+        function updateState(gameId, key, value) {
+            let state = readPersistedState();
+            if (!state[gameId]) state[gameId] = {};
+            state[gameId][key] = value;
+            state[gameId] = normalizeEntry(state[gameId]);
+            state[gameId].updatedAt = nowIso();
+            stateData[gameId] = state[gameId];
+            writePersistedState(state);
+            queueSyncGame(gameId);
+        }
+
+        function queueSyncGame(gameId) {
+            if (applyingRemoteState || !syncReady || !syncClient) return;
+            clearTimeout(syncTimers.get(gameId));
+            syncTimers.set(gameId, setTimeout(() => {
+                syncTimers.delete(gameId);
+                syncGameToRemote(gameId);
+            }, 650));
+        }
+
+        function queueTextSyncGame(gameId) {
+            clearTimeout(textSyncTimers.get(gameId));
+            textSyncTimers.set(gameId, setTimeout(() => {
+                textSyncTimers.delete(gameId);
+                queueSyncGame(gameId);
+            }, 900));
+        }
+
+        async function syncGameToRemote(gameId) {
+            if (!syncReady || !syncClient) return;
+            const state = readPersistedState();
+            const data = normalizeEntry(state[gameId] || {});
+            if (!data.updatedAt) data.updatedAt = nowIso();
+            const { error } = await syncClient
+                .from(SYNC_CONFIG.tableName)
+                .upsert({
+                    list_id: SYNC_CONFIG.listId,
+                    game_id: gameId,
+                    data,
+                    updated_at: data.updatedAt
+                }, { onConflict: 'list_id,game_id' });
+            if (error) {
+                console.error('Falha ao sincronizar jogo:', error);
+                setSyncStatus('Sync pendente', 'warning');
+                return;
+            }
+            setSyncStatus('Sincronizado', 'online');
+        }
+
+        async function syncAllLocalState(remoteTimes = new Map()) {
+            if (!syncReady || !syncClient) return;
+            const state = readPersistedState();
+            const rows = Object.entries(state)
+                .map(([gameId, entry]) => {
+                    const data = normalizeEntry(entry);
+                    if (!data.updatedAt) data.updatedAt = nowIso();
+                    return { gameId, data };
+                })
+                .filter(({ gameId, data }) => getEntryTime(data) > (remoteTimes.get(gameId) || 0))
+                .map(({ gameId, data }) => ({
+                    list_id: SYNC_CONFIG.listId,
+                    game_id: gameId,
+                    data,
+                    updated_at: data.updatedAt
+                }));
+            if (rows.length === 0) return;
+            const { error } = await syncClient
+                .from(SYNC_CONFIG.tableName)
+                .upsert(rows, { onConflict: 'list_id,game_id' });
+            if (error) {
+                console.error('Falha ao enviar progresso local:', error);
+                setSyncStatus('Sync pendente', 'warning');
+            }
+        }
+
+        async function pullRemoteState() {
+            const { data, error } = await syncClient
+                .from(SYNC_CONFIG.tableName)
+                .select('game_id,data,updated_at')
+                .eq('list_id', SYNC_CONFIG.listId);
+            if (error) throw error;
+            const remoteTimes = new Map();
+            data.forEach(row => {
+                remoteTimes.set(row.game_id, getEntryTime(row.data, row.updated_at));
+                applyRemoteRow(row);
+            });
+            return remoteTimes;
+        }
+
+        async function pollRemoteState() {
+            if (!syncReady || !syncClient || applyingRemoteState) return;
+            try {
+                await pullRemoteState();
+                if (document.getElementById('sync-status')?.dataset.mode !== 'online') {
+                    setSyncStatus('Sync ativo', 'online');
+                }
+            } catch (err) {
+                console.error('Falha ao atualizar sincronização:', err);
+                setSyncStatus('Sync pendente', 'warning');
+            }
+        }
+
+        function startSyncPolling() {
+            if (syncPollInterval) return;
+            syncPollInterval = setInterval(pollRemoteState, 4000);
+        }
+
+        function applyRemoteRow(row) {
+            const gameId = row.game_id;
+            const remoteEntry = normalizeEntry(row.data || {});
+            remoteEntry.updatedAt = remoteEntry.updatedAt || row.updated_at || nowIso();
+            const state = readPersistedState();
+            const localEntry = state[gameId] || {};
+            if (getEntryTime(remoteEntry, row.updated_at) < getEntryTime(localEntry)) return;
+            applyingRemoteState = true;
+            state[gameId] = remoteEntry;
+            stateData[gameId] = remoteEntry;
+            writePersistedState(state);
+            applyEntryToDom(gameId, remoteEntry);
+            applyingRemoteState = false;
+        }
+
+        function applyEntryToDom(gameId, entry) {
+            const gameItem = document.getElementById(gameId);
+            if (!gameItem) return;
+            const checks = normalizeChecks(entry.checks || {}, entry.obs || '');
+            CHECK_STEPS.forEach(step => {
+                const btn = gameItem.querySelector(`.check-btn[onclick*="'${step.key}'"]`);
+                if (!btn) return;
+                const on = !!checks[step.key];
+                btn.classList.toggle('checked', on);
+                const icon = btn.querySelector('.material-icons');
+                if (icon) icon.innerText = on ? 'check_circle' : 'radio_button_unchecked';
+            });
+            const select = gameItem.querySelector('.language-select');
+            if (select) {
+                select.value = normalizeLanguage(entry.language);
+                const wrapper = select.closest('.language-select-container');
+                if (wrapper) wrapper.classList.toggle('has-lang', select.value !== 'nao');
+            }
+            const textarea = gameItem.querySelector('textarea');
+            if (textarea && document.activeElement !== textarea && textarea.value !== (entry.obs || '')) {
+                textarea.value = entry.obs || '';
+            }
+            const progress = checkedCount(checks) / CHECK_STEPS.length;
+            gameItem.classList.toggle('listed', isAllChecked(checks));
+            gameItem.style.setProperty('--progress', progress);
+            updateSummary();
+            updateToggleAllButton();
+            if (currentViewApplied && !applyingRemoteState) applyListView();
+        }
+
+        async function initRealtimeSync() {
+            if (!isSyncConfigured()) {
+                setSyncStatus('Local', 'local');
+                return;
+            }
+            if (!window.supabase?.createClient) {
+                setSyncStatus('Sync indisponível', 'warning');
+                return;
+            }
+            try {
+                setSyncStatus('Conectando', 'warning');
+                syncClient = window.supabase.createClient(SYNC_CONFIG.supabaseUrl, SYNC_CONFIG.supabaseAnonKey);
+                syncReady = true;
+                const remoteTimes = await pullRemoteState();
+                await syncAllLocalState(remoteTimes);
+                setSyncStatus('Sync ativo', 'online');
+                startSyncPolling();
+                syncClient
+                    .channel(`top300:${SYNC_CONFIG.listId}`)
+                    .on('postgres_changes', {
+                        event: '*',
+                        schema: 'public',
+                        table: SYNC_CONFIG.tableName,
+                        filter: `list_id=eq.${SYNC_CONFIG.listId}`
+                    }, payload => {
+                        if (payload.new) applyRemoteRow(payload.new);
+                    })
+                    .subscribe(status => {
+                        if (status === 'SUBSCRIBED') setSyncStatus('Tempo real', 'online');
+                        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                            setSyncStatus('Sync ativo', 'online');
+                        }
+                    });
+            } catch (err) {
+                console.error('Falha ao iniciar sincronização:', err);
+                setSyncStatus('Sync pendente', 'warning');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        initRealtimeSync();
+    </script>
+</body>
+</html>

@@ -3,14 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="0; url=top_300_br.html">
-    <title>Top 300 BR</title>
-    <link rel="canonical" href="top_300_br.html">
-    <script>
-        window.location.replace('top_300_br.html');
-    </script>
+    <title>Organizador de Jogos · Xbox 360</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        body { display: flex; align-items: flex-start; justify-content: center; padding-top: 48px; }
+        .hub { width: 100%; max-width: 720px; padding: 0 16px; }
+        .hub h1 { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; color: var(--ink-0); }
+        .hub .eyebrow { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 32px; }
+        .hub-cards { display: grid; gap: 14px; grid-template-columns: 1fr; }
+        .hub-card { display: block; padding: 22px 22px 20px; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius-md); color: inherit; text-decoration: none; transition: border-color 0.18s, background 0.18s; }
+        .hub-card:hover { border-color: var(--line-strong); background: var(--bg-2); }
+        .hub-card .label { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.1em; }
+        .hub-card .name { display: block; font-size: 1.25rem; font-weight: 600; color: var(--ink-0); margin: 6px 0 4px; letter-spacing: -0.01em; }
+        .hub-card .desc { color: var(--ink-2); font-size: 0.92rem; line-height: 1.45; }
+        .hub-card.is-top300 .label { color: var(--accent); }
+        .hub-card.is-biblioteca .label { color: var(--success); }
+        @media (min-width: 720px) { .hub-cards { grid-template-columns: 1fr 1fr; } }
+    </style>
 </head>
 <body>
-    <p><a href="top_300_br.html">Abrir Top 300 BR</a></p>
+    <div class="hub">
+        <div class="eyebrow">Organizador · Xbox 360</div>
+        <h1>O que você quer abrir?</h1>
+        <div class="hub-cards">
+            <a class="hub-card is-top300" href="top_300_br.html">
+                <span class="label">Lista do que falta</span>
+                <span class="name">Top 300 BR</span>
+                <span class="desc">Os 300 jogos brasileiros mais buscados — sua lista de "ainda preciso baixar/testar".</span>
+            </a>
+            <a class="hub-card is-biblioteca" href="biblioteca.html">
+                <span class="label">Lista do que tenho</span>
+                <span class="name">Minha biblioteca</span>
+                <span class="desc">Todos os jogos atualmente no seu PC, atualizados pelo scanner do EASY XBOX.</span>
+            </a>
+        </div>
+    </div>
 </body>
 </html>

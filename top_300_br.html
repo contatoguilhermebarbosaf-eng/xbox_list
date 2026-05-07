@@ -1875,7 +1875,14 @@
               }
             ];
 
-        const STORAGE_KEY = 'top300GameState';
+        const STORAGE_KEY = 'gameState';
+        const LEGACY_STORAGE_KEY = 'top300GameState';
+
+        function gameIdFor(game) {
+            const tid = (game?.titleId || '').toUpperCase();
+            if (tid) return 'game_' + tid;
+            return 'game_rank' + game.rank;
+        }
         const SYNC_CONFIG = {
             supabaseUrl: 'https://wfxisigpgvyxlammldty.supabase.co',
             supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmeGlzaWdwZ3Z5eGxhbW1sZHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MzY3MzIsImV4cCI6MjA5MzQxMjczMn0.yirxpKMbov9U8RFiU7d4b5oSvapm5ZljyNWDye7xzl0',
@@ -1956,6 +1963,34 @@
         }
 
         const container = document.getElementById('game-list-container');
+
+        function migrateLegacyTop300KeysOnce() {
+            try {
+                const current = localStorage.getItem(STORAGE_KEY);
+                if (current && current !== '{}') return;
+                const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+                if (!legacyRaw) return;
+                const legacy = JSON.parse(legacyRaw);
+                if (!legacy || typeof legacy !== 'object') return;
+                const remapped = {};
+                gamesData.forEach((game, index) => {
+                    const oldKey = 'game_' + index;
+                    const newKey = (function gid(g){
+                        const tid = (g?.titleId || '').toUpperCase();
+                        return tid ? 'game_' + tid : 'game_rank' + g.rank;
+                    })(game);
+                    if (legacy[oldKey] !== undefined) remapped[newKey] = legacy[oldKey];
+                });
+                Object.keys(legacy).forEach(k => {
+                    if (!/^game_\d+$/.test(k) && remapped[k] === undefined) remapped[k] = legacy[k];
+                });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(remapped));
+            } catch (err) {
+                console.warn('Falha ao migrar chaves legadas:', err);
+            }
+        }
+        migrateLegacyTop300KeysOnce();
+
         const savedStates = readPersistedState();
 
         const CHECK_STEPS = [
@@ -1968,64 +2003,6 @@
 
         const FINAL_CHECK_KEY = 'obsReviewed';
         const gameViewItems = [];
-        const LIBRARY_MATCHED_GAME_IDS = new Set([
-                'game_2', // 3. Call of Duty: Black Ops II
-                'game_8', // 9. Call of Duty: Modern Warfare 3
-                'game_10', // 11. Far Cry 3
-                'game_12', // 13. Resident Evil 6
-                'game_13', // 14. Assassin's Creed IV: Black Flag
-                'game_17', // 18. Halo: Reach
-                'game_19', // 20. Need for Speed: Hot Pursuit
-                'game_22', // 23. Resident Evil 5
-                'game_23', // 24. Call of Duty: Black Ops
-                'game_26', // 27. Need for Speed Carbon
-                'game_31', // 32. Borderlands 2
-                'game_34', // 35. Far Cry 4
-                'game_36', // 37. Need for Speed: Rivals
-                'game_37', // 38. Tomb Raider
-                'game_38', // 39. Resident Evil 4
-                'game_43', // 44. Call of Duty: Modern Warfare 2
-                'game_46', // 47. Halo 4
-                'game_49', // 50. Need for Speed: ProStreet
-                'game_52', // 53. Call of Duty: Ghosts
-                'game_55', // 56. Resident Evil Revelations
-                'game_58', // 59. Assassin's Creed III
-                'game_59', // 60. Need for Speed: The Run
-                'game_73', // 74. Need for Speed: Undercover
-                'game_76', // 77. Halo 3
-                'game_77', // 78. Assassin's Creed Rogue
-                'game_83', // 84. Need for Speed: Shift
-                'game_84', // 85. The Elder Scrolls IV: Oblivion
-                'game_92', // 93. State of Decay
-                'game_102', // 103. Call of Duty: Advanced Warfare
-                'game_111', // 112. Resident Evil: Operation Raccoon City
-                'game_114', // 115. Rise of the Tomb Raider
-                'game_116', // 117. Tom Clancy's Splinter Cell: Blacklist
-                'game_117', // 118. Dark Souls
-                'game_121', // 122. Halo 3: ODST
-                'game_122', // 123. Need for Speed: Most Wanted (2012)
-                'game_129', // 130. Castlevania: Lords of Shadow
-                'game_139', // 140. Crysis 3
-                'game_145', // 146. Dante's Inferno
-                'game_147', // 148. The Witcher 2: Assassins of Kings Enhanced Edition
-                'game_151', // 152. Dead Island GOTY
-                'game_153', // 154. L.A. Noire Complete Edition
-                'game_157', // 158. Resident Evil 5
-                'game_159', // 160. Call of Duty Modern Warfare 3
-                'game_162', // 163. Need for Speed Carbon
-                'game_166', // 167. Crysis 2
-                'game_172', // 173. Dark Souls II
-                'game_238', // 239. Dragon Age Origins
-                'game_243', // 244. Dead Island Riptide
-                'game_244', // 245. Deus Ex: Human Revolution
-                'game_267', // 268. Middle-earth: Shadow of Mordor
-                'game_268', // 269. 007: Blood Stone
-                'game_269', // 270. 007 Legends
-                'game_270', // 271. GoldenEye 007: Reloaded
-                'game_289', // 290. Dragon's Dogma: Dark Arisen
-                'game_295', // 296. Halo: Combat Evolved Anniversary
-                'game_297', // 298. Dead Island: Riptide
-        ]);
         const LANGUAGE_OPTIONS = [
             { value: 'nao', label: 'NÃO' },
             { value: 'legendado', label: 'Legendado' },
@@ -2072,36 +2049,6 @@
                 }
                 if (entry && entry.language !== normalizeLanguage(entry.language)) {
                     entry.language = normalizeLanguage(entry.language);
-                    changed = true;
-                }
-            });
-            if (changed) writePersistedState(state);
-            return state;
-        }
-
-        function seedLibraryCheckState(state) {
-            let changed = false;
-            LIBRARY_MATCHED_GAME_IDS.forEach(gameId => {
-                if (!state[gameId]) {
-                    state[gameId] = {};
-                    changed = true;
-                }
-                if (!state[gameId].checks) {
-                    state[gameId].checks = {};
-                    changed = true;
-                }
-                ['downloading', 'onPc'].forEach(key => {
-                    if (state[gameId].checks[key] !== true) {
-                        state[gameId].checks[key] = true;
-                        changed = true;
-                    }
-                });
-                const obs = state[gameId].obs !== undefined ? state[gameId].obs : '';
-                const normalized = normalizeChecks(state[gameId].checks, obs);
-                const normalizedChanged = CHECK_STEPS.some(step => state[gameId].checks[step.key] !== normalized[step.key]);
-                if (normalizedChanged || state[gameId].listed !== isAllChecked(normalized)) {
-                    state[gameId].checks = normalized;
-                    state[gameId].listed = isAllChecked(normalized);
                     changed = true;
                 }
             });
@@ -2239,8 +2186,8 @@
                 progressText.textContent = `${visibleCount} / ${total} exibidos`;
                 return;
             }
-            const completed = gamesData.reduce((count, _game, index) => {
-                return count + (isAllChecked(getCurrentChecks(`game_${index}`)) ? 1 : 0);
+            const completed = gamesData.reduce((count, game) => {
+                return count + (isAllChecked(getCurrentChecks(gameIdFor(game))) ? 1 : 0);
             }, 0);
             progressText.textContent = `${completed} / ${total} concluídos`;
         }
@@ -2259,8 +2206,8 @@
             applyListView();
         }
 
-        gamesData.forEach((game, index) => {
-            const gameId = 'game_' + index;
+        gamesData.forEach((game) => {
+            const gameId = gameIdFor(game);
             const savedObs = stateData[gameId]?.obs !== undefined ? stateData[gameId].obs : game.obs;
             const checks = getChecks(gameId, savedObs);
             const language = normalizeLanguage(stateData[gameId]?.language);
@@ -2500,7 +2447,7 @@
             let completed = 0;
 
             for (let i = 0; i < gamesData.length; i++) {
-                const gameId = 'game_' + i;
+                const gameId = gameIdFor(gamesData[i]);
                 const entry = state[gameId] || {};
                 const obs = entry.obs !== undefined ? entry.obs : (gamesData[i].obs || '');
                 const checks = normalizeChecks(entry.checks || {}, obs);

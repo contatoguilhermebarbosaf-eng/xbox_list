@@ -1,7 +1,8 @@
-# Publicar somente o Top 300 e dependencias diretas.
+# Publicar somente as paginas do organizador e dependencias diretas.
 *
 
 !top_300_br.html
+!biblioteca.html
 !index.html
 !assets/
 !assets/styles.css
