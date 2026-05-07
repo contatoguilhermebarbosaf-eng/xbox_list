@@ -54,6 +54,10 @@
                     </button>
                 </div>
                 <div class="toolbar-actions">
+                    <button class="action-btn toolbar-btn" id="toggle-listed-filter" onclick="toggleListedFilter(event)" title="Ocultar jogos concluídos">
+                        <span class="material-icons">visibility</span>
+                        <span>Ocultar concluídos</span>
+                    </button>
                     <button class="action-btn toolbar-btn" id="toggle-all-observations" onclick="toggleAllObservations(event)" title="Mostrar todas as observações">
                         <span class="material-icons">unfold_more</span>
                         <span>Mostrar obs</span>
@@ -2146,6 +2150,35 @@
                 .trim();
         }
 
+        const HIDE_LISTED_PREF_KEY = 'top300HideListed';
+
+        function loadHideListedPref() {
+            return localStorage.getItem(HIDE_LISTED_PREF_KEY) === '1';
+        }
+
+        function saveHideListedPref(hide) {
+            localStorage.setItem(HIDE_LISTED_PREF_KEY, hide ? '1' : '0');
+        }
+
+        function updateHideListedButton() {
+            const btn = document.getElementById('toggle-listed-filter');
+            if (!btn) return;
+            const hide = loadHideListedPref();
+            btn.classList.toggle('is-active', hide);
+            btn.title = hide ? 'Mostrar jogos concluídos' : 'Ocultar jogos concluídos';
+            const icon = btn.querySelector('.material-icons');
+            if (icon) icon.innerText = hide ? 'visibility_off' : 'visibility';
+            const label = btn.querySelector('span:last-child');
+            if (label) label.innerText = hide ? 'Mostrar concluídos' : 'Ocultar concluídos';
+        }
+
+        function toggleListedFilter(event) {
+            if (event?.stopPropagation) event.stopPropagation();
+            saveHideListedPref(!loadHideListedPref());
+            updateHideListedButton();
+            applyListView(event);
+        }
+
         function gameMatchesFilters(gameId) {
             const item = gameViewItems.find(game => game.gameId === gameId);
             const query = normalizeSearchText(document.getElementById('search-query')?.value || '');
@@ -2153,6 +2186,7 @@
                 const haystack = normalizeSearchText(`${item.rank} ${item.name} ${item.titleId || ''}`);
                 if (!haystack.includes(query)) return false;
             }
+            if (loadHideListedPref() && isAllChecked(getCurrentChecks(gameId))) return false;
             const selected = getSelectedFilterChecks();
             if (selected.length === 0) return true;
             const mode = document.getElementById('check-filter-mode')?.value || 'all';
@@ -2220,6 +2254,8 @@
             if (mode) mode.value = 'all';
             if (search) search.value = '';
             document.querySelectorAll('#filter-checks input:checked').forEach(input => { input.checked = false; });
+            saveHideListedPref(false);
+            updateHideListedButton();
             applyListView();
         }
 
@@ -2295,6 +2331,7 @@
         });
 
         initFilterControls();
+        updateHideListedButton();
         updateSummary();
         updateToggleAllButton();
         applyListView(null, { silent: true });
@@ -2412,7 +2449,7 @@
             stateData[gameId] = state[gameId];
             writePersistedState(state);
             queueTextSyncGame(gameId);
-            updateSummary();
+            scheduleSummaryUpdate();
         }
 
         function getCurrentState() {
@@ -2427,43 +2464,85 @@
             return normalizeChecks(entry.checks || {}, obs);
         }
 
-        function updateSummary() {
-            const stats = CHECK_STEPS.map(step => ({ ...step, count: 0 }));
-            const languageStats = { legendado: 0, dublado: 0 };
-            const state = getCurrentState();
-            let completed = 0;
-            gamesData.forEach((game, index) => {
-                const gameId = 'game_' + index;
-                const checks = getCurrentChecks(gameId);
-                stats.forEach(stat => { if (checks[stat.key]) stat.count += 1; });
-                const language = normalizeLanguage(state[gameId]?.language);
-                if (languageStats[language] !== undefined) languageStats[language] += 1;
-                if (isAllChecked(checks)) completed += 1;
-            });
+        let summaryItemsLayout = null;
+        let summaryValueNodes = null;
 
+        function buildSummaryLayout() {
+            const stats = CHECK_STEPS.map(step => ({ key: step.key, label: step.label }));
             const items = [
-                { label: 'Jogos na lista', count: gamesData.length, kind: 'primary' },
-                ...stats.map(stat => ({ label: stat.label, count: stat.count })),
-                { label: 'Legendado', count: languageStats.legendado },
-                { label: 'Dublado', count: languageStats.dublado },
-                { label: 'Concluídos', count: completed, kind: 'success' }
+                { label: 'Jogos na lista', kind: 'primary' },
+                ...stats.map(stat => ({ label: stat.label, statKey: stat.key })),
+                { label: 'Legendado', langKey: 'legendado' },
+                { label: 'Dublado', langKey: 'dublado' },
+                { label: 'Concluídos', kind: 'success', completed: true }
             ];
-
-            document.getElementById('stats-summary').innerHTML = items.map(item => {
+            const target = document.getElementById('stats-summary');
+            target.innerHTML = items.map(item => {
                 const cls = item.kind === 'primary' ? 'is-primary' : item.kind === 'success' ? 'is-success' : '';
                 return `
                     <div class="stat-card ${cls}">
-                        <span class="stat-value">${item.count}</span>
+                        <span class="stat-value">0</span>
                         <span class="stat-label" title="${item.label}">${item.label}</span>
                     </div>
                 `;
             }).join('');
+            summaryItemsLayout = items;
+            summaryValueNodes = Array.from(target.querySelectorAll('.stat-value'));
+        }
+
+        function updateSummary() {
+            if (!summaryItemsLayout) buildSummaryLayout();
+
+            const state = readPersistedState();
+            const counts = {};
+            CHECK_STEPS.forEach(step => { counts[step.key] = 0; });
+            const languageStats = { legendado: 0, dublado: 0 };
+            let completed = 0;
+
+            for (let i = 0; i < gamesData.length; i++) {
+                const gameId = 'game_' + i;
+                const entry = state[gameId] || {};
+                const obs = entry.obs !== undefined ? entry.obs : (gamesData[i].obs || '');
+                const checks = normalizeChecks(entry.checks || {}, obs);
+                for (let j = 0; j < CHECK_STEPS.length; j++) {
+                    if (checks[CHECK_STEPS[j].key]) counts[CHECK_STEPS[j].key] += 1;
+                }
+                const language = normalizeLanguage(entry.language);
+                if (languageStats[language] !== undefined) languageStats[language] += 1;
+                if (isAllChecked(checks)) completed += 1;
+            }
+
+            for (let i = 0; i < summaryItemsLayout.length; i++) {
+                const item = summaryItemsLayout[i];
+                let value;
+                if (item.kind === 'primary') value = gamesData.length;
+                else if (item.completed) value = completed;
+                else if (item.statKey) value = counts[item.statKey];
+                else if (item.langKey) value = languageStats[item.langKey];
+                else value = 0;
+                const node = summaryValueNodes[i];
+                const str = String(value);
+                if (node.textContent !== str) node.textContent = str;
+            }
 
             const total = gamesData.length;
             const pct = total === 0 ? 0 : (completed / total) * 100;
-            document.getElementById('progress-fill').style.width = pct + '%';
-            document.getElementById('progress-text').textContent = `${completed} / ${total} concluídos`;
+            const fill = document.getElementById('progress-fill');
+            const fillStr = pct + '%';
+            if (fill.style.width !== fillStr) fill.style.width = fillStr;
+            const progText = document.getElementById('progress-text');
+            const txt = `${completed} / ${total} concluídos`;
+            if (progText.textContent !== txt) progText.textContent = txt;
             if (gameViewItems.length) updateFilterSummary(document.querySelectorAll('.game-item:not([hidden])').length);
+        }
+
+        let summaryDebounceId = null;
+        function scheduleSummaryUpdate() {
+            if (summaryDebounceId !== null) return;
+            summaryDebounceId = setTimeout(() => {
+                summaryDebounceId = null;
+                updateSummary();
+            }, 220);
         }
 
         function updateState(gameId, key, value) {
