@@ -1546,11 +1546,11 @@
 
             const renderCheckButton = step => {
                 if (step.key === 'tested') {
-                    const ok = checks.tested && !checks.tested_broken;
-                    const broken = checks.tested && checks.tested_broken;
-                    const cls = ok ? 'checked tested-ok' : broken ? 'checked tested-broken' : '';
-                    const icon = ok ? 'check_circle' : broken ? 'cancel' : 'radio_button_unchecked';
-                    const titleAttr = ok ? 'Testado: OK' : broken ? 'Testado: Quebrado' : 'Não testado';
+                    const broken = !!checks.tested_broken;
+                    const ok = !!checks.tested && !broken;
+                    const cls = broken ? 'checked tested-broken' : ok ? 'checked tested-ok' : '';
+                    const icon = broken ? 'cancel' : ok ? 'check_circle' : 'radio_button_unchecked';
+                    const titleAttr = broken ? 'Testado: Quebrado' : ok ? 'Testado: OK' : 'Não testado';
                     return `
                         <button class="action-btn check-btn ${cls}"
                                 onclick="toggleCheck(this, '${gameId}', '${step.key}', event)"
@@ -1699,7 +1699,7 @@
                 if (!curTested && !curBroken) {
                     newTested = true;  newBroken = false; // none → ok
                 } else if (curTested && !curBroken) {
-                    newTested = true;  newBroken = true;  // ok → broken
+                    newTested = false; newBroken = true;  // ok → broken
                 } else {
                     newTested = false; newBroken = false; // broken → none
                 }
@@ -1711,7 +1711,7 @@
                     btn.classList.add('checked', 'tested-ok');
                     btn.querySelector('.material-icons').innerText = 'check_circle';
                     btn.title = 'Testado: OK';
-                } else if (newTested && newBroken) {
+                } else if (newBroken) {
                     btn.classList.add('checked', 'tested-broken');
                     btn.querySelector('.material-icons').innerText = 'cancel';
                     btn.title = 'Testado: Quebrado';
@@ -1834,7 +1834,7 @@
                 for (let j = 0; j < CHECK_STEPS.length; j++) {
                     if (checks[CHECK_STEPS[j].key]) counts[CHECK_STEPS[j].key] += 1;
                 }
-                if (checks.tested && checks.tested_broken) broken += 1;
+                if (checks.tested_broken) broken += 1;
                 const language = normalizeLanguage(entry.language);
                 if (languageStats[language] !== undefined) languageStats[language] += 1;
                 if (isAllChecked(checks)) completed += 1;
@@ -2004,18 +2004,18 @@
                 const btn = gameItem.querySelector(`.check-btn[onclick*="'${step.key}'"]`);
                 if (!btn) return;
                 if (step.key === 'tested') {
-                    const ok = checks.tested && !checks.tested_broken;
-                    const broken = checks.tested && checks.tested_broken;
+                    const broken = !!checks.tested_broken;
+                    const ok = !!checks.tested && !broken;
                     btn.classList.remove('checked', 'tested-ok', 'tested-broken');
                     const icon = btn.querySelector('.material-icons');
-                    if (ok) {
-                        btn.classList.add('checked', 'tested-ok');
-                        if (icon) icon.innerText = 'check_circle';
-                        btn.title = 'Testado: OK';
-                    } else if (broken) {
+                    if (broken) {
                         btn.classList.add('checked', 'tested-broken');
                         if (icon) icon.innerText = 'cancel';
                         btn.title = 'Testado: Quebrado';
+                    } else if (ok) {
+                        btn.classList.add('checked', 'tested-ok');
+                        if (icon) icon.innerText = 'check_circle';
+                        btn.title = 'Testado: OK';
                     } else {
                         if (icon) icon.innerText = 'radio_button_unchecked';
                         btn.title = 'Não testado';
