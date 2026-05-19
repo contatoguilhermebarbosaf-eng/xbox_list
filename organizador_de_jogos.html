@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador de Jogos</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+    <div class="container" id="game-list-container">
+        <div class="sticky-dashboard">
+            <div class="title-row">
+                <div>
+                    <div class="eyebrow">Biblioteca pessoal · Xbox 360</div>
+                    <h1>Organizador <span class="h1-accent">de Jogos</span></h1>
+                </div>
+                <div class="progress-meta" aria-hidden="true">
+                    <span id="progress-text">0 / 0</span>
+                    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+                </div>
+            </div>
+            <div class="dashboard">
+                <div class="stats-grid" id="stats-summary" aria-live="polite"></div>
+                <div class="toolbar-actions">
+                    <button class="action-btn toolbar-btn" id="toggle-all-observations" onclick="toggleAllObservations(event)" title="Mostrar todas as observações">
+                        <span class="material-icons">unfold_more</span>
+                        <span>Mostrar obs</span>
+                    </button>
+                    <button class="action-btn toolbar-btn" onclick="exportState(event)" title="Exportar progresso (JSON)">
+                        <span class="material-icons">download</span>
+                        <span>Exportar</span>
+                    </button>
+                    <button class="action-btn toolbar-btn" onclick="document.getElementById('import-file').click()" title="Importar progresso (JSON)">
+                        <span class="material-icons">upload</span>
+                        <span>Importar</span>
+                    </button>
+                    <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="importState(event)">
+                </div>
+            </div>
+        </div>
+        <!-- Game items will be injected here via JavaScript -->
+    </div>
+
+    <div id="toast">Copiado para a área de transferência!</div>
+
+    <script>
+        const gamesData = [
+            { name: "007: Blood Stone", obs: "" },
+            { name: "007 Legends", obs: "" },
+            { name: "007: Quantum of Solace", obs: "" },
+            { name: "Alpha Protocol", obs: "" },
+            { name: "Assassin’s Creed III", obs: "" },
+            { name: "Assassin’s Creed IV: Black Flag", obs: "" },
+            { name: "Assassin’s Creed Rogue", obs: "" },
+            { name: "Black", obs: "" },
+            { name: "Borderlands 2", obs: "" },
+            { name: "Call of Duty: Advanced Warfare", obs: "modo Exo Zombies completo" },
+            { name: "Call of Duty: Black Ops", obs: "foco em modo zumbi com todos os mapas" },
+            { name: "Call of Duty: Black Ops II", obs: "foco em modo zumbi com todos os mapas" },
+            { name: "Call of Duty: Black Ops III", obs: "foco em modo zumbi com todos os mapas" },
+            { name: "Call of Duty: Ghosts", obs: "modo Extinction completo" },
+            { name: "Call of Duty: Modern Warfare 2", obs: "" },
+            { name: "Call of Duty: Modern Warfare 3", obs: "" },
+            { name: "Call of Duty: WWII", obs: "citado como “WW1”, mas o correto é WWII (zumbi incluso)" },
+            { name: "Castlevania: Lords of Shadow", obs: "" },
+            { name: "Castlevania: Lords of Shadow 2", obs: "" },
+            { name: "Crysis", obs: "" },
+            { name: "Crysis 2", obs: "" },
+            { name: "Crysis 3", obs: "" },
+            { name: "Dante’s Inferno", obs: "" },
+            { name: "Dark Souls II", obs: "uma versão padrão + outra modificada (dublagem IA)" },
+            { name: "Dark Souls II: Scholar of the First Sin", obs: "" },
+            { name: "Dark Souls: Prepare to Die Edition", obs: "" },
+            { name: "Dead Island GOTY", obs: "" },
+            { name: "Dead Island: Riptide", obs: "" },
+            { name: "Deus Ex: Human Revolution Director’s Cut", obs: "" },
+            { name: "Dragon Age: Origins", obs: "" },
+            { name: "Dragon’s Dogma: Dark Arisen", obs: "" },
+            { name: "Far Cry 3", obs: "" },
+            { name: "Far Cry 4", obs: "versão Kyrat / Limited com DLCs (Vale dos Yetis, Durgesh, Hurk Pack)" },
+            { name: "GoldenEye 007: Reloaded", obs: "" },
+            { name: "Halo 2", obs: "" },
+            { name: "Halo 3", obs: "" },
+            { name: "Halo 3: ODST", obs: "" },
+            { name: "Halo 4", obs: "" },
+            { name: "Halo: Combat Evolved Anniversary", obs: "" },
+            { name: "Halo: Reach", obs: "" },
+            { name: "L.A. Noire Complete Edition", obs: "" },
+            { name: "Metro 2033", obs: "pedido de versão PT-BR" },
+            { name: "Metro: Last Light", obs: "pedido de versão PT-BR" },
+            { name: "Middle-earth: Shadow of Mordor", obs: "" },
+            { name: "Need for Speed: Carbon", obs: "" },
+            { name: "Need for Speed: Hot Pursuit", obs: "" },
+            { name: "Need for Speed: Most Wanted (2012)", obs: "preferência por versão dublada" },
+            { name: "Need for Speed: ProStreet", obs: "" },
+            { name: "Need for Speed: Rivals", obs: "" },
+            { name: "Need for Speed: Shift", obs: "" },
+            { name: "Need for Speed: The Run", obs: "" },
+            { name: "Need for Speed: Undercover", obs: "" },
+            { name: "Red Faction: Armageddon", obs: "inclui DLCs (Demons of the Badlands / Path to War)" },
+            { name: "Red Faction: Guerrilla", obs: "inclui DLCs (Demons of the Badlands / Path to War)" },
+            { name: "Resident Evil 3", obs: "" },
+            { name: "Resident Evil 4 HD", obs: "" },
+            { name: "Resident Evil 5 Gold Edition", obs: "" },
+            { name: "Resident Evil 6", obs: "" },
+            { name: "Resident Evil: Operation Raccoon City", obs: "" },
+            { name: "Resident Evil: Revelations", obs: "" },
+            { name: "Resident Evil: Revelations 2", obs: "" },
+            { name: "Rise of the Tomb Raider", obs: "com DLCs" },
+            { name: "State of Decay", obs: "" },
+            { name: "The Elder Scrolls IV: Oblivion", obs: "" },
+            { name: "The Witcher 2: Assassins of Kings", obs: "legendado PT-BR" },
+            { name: "Tom Clancy’s Splinter Cell: Blacklist", obs: "" },
+            { name: "Tom Clancy’s Splinter Cell: Conviction", obs: "" },
+            { name: "Tomb Raider (2013)", obs: "“Definitive Edition” não saiu no Xbox 360 (só o 2013 base)" }
+        ];
+
+        const container = document.getElementById('game-list-container');
+
+        // Load states from LocalStorage
+        const savedStates = JSON.parse(localStorage.getItem('gameState')) || {};
+
+        const CHECK_STEPS = [
+            { key: 'downloading',  label: 'Baixando',      title: 'Baixando' },
+            { key: 'onPc',         label: 'No PC',         title: 'No PC' },
+            { key: 'onHd',         label: 'No HD',         title: 'No HD' },
+            { key: 'tested',       label: 'Testado',       title: 'Testado' },
+            { key: 'obsReviewed',  label: 'Obs revisada',  title: 'Observação revisada' }
+        ];
+
+        const FINAL_CHECK_KEY = 'obsReviewed';
+        const LANGUAGE_OPTIONS = [
+            { value: 'nao', label: 'NÃO' },
+            { value: 'legendado', label: 'Legendado' },
+            { value: 'dublado', label: 'Dublado' }
+        ];
+
+        function normalizeChecks(checks, obs = '') {
+            const normalized = {
+                downloading: !!(checks.downloading ?? checks.downloaded),
+                onPc:        !!(checks.onPc ?? checks.installed),
+                onHd:        !!checks.onHd,
+                tested:      !!checks.tested,
+                obsReviewed: !!(checks.obsReviewed ?? checks.finished)
+            };
+            if (obs.trim() !== '') normalized.obsReviewed = false;
+            return normalized;
+        }
+
+        function normalizeLanguage(value) {
+            return LANGUAGE_OPTIONS.some(option => option.value === value) ? value : 'nao';
+        }
+
+        function migrateLegacyState(state) {
+            let changed = false;
+            Object.keys(state).forEach(id => {
+                const entry = state[id];
+                if (entry && entry.listed === true && entry.checks === undefined) {
+                    const obs = entry.obs !== undefined ? entry.obs : '';
+                    entry.checks = normalizeChecks({
+                        downloaded: true,
+                        installed: true,
+                        tested: true,
+                        finished: obs.trim() === ''
+                    }, obs);
+                    entry.listed = isAllChecked(entry.checks);
+                    changed = true;
+                } else if (entry && entry.checks) {
+                    const obs = entry.obs !== undefined ? entry.obs : '';
+                    const normalized = normalizeChecks(entry.checks, obs);
+                    const normalizedChanged = CHECK_STEPS.some(step => entry.checks[step.key] !== normalized[step.key]);
+                    if (normalizedChanged || entry.listed !== isAllChecked(normalized)) {
+                        entry.checks = normalized;
+                        entry.listed = isAllChecked(normalized);
+                        changed = true;
+                    }
+                }
+
+                if (entry && entry.language !== normalizeLanguage(entry.language)) {
+                    entry.language = normalizeLanguage(entry.language);
+                    changed = true;
+                }
+            });
+            if (changed) localStorage.setItem('gameState', JSON.stringify(state));
+            return state;
+        }
+
+        const stateData = migrateLegacyState(savedStates);
+
+        function getChecks(gameId, defaultObs = '') {
+            const checks = stateData[gameId]?.checks || {};
+            const obs = stateData[gameId]?.obs !== undefined ? stateData[gameId].obs : defaultObs;
+            return normalizeChecks(checks, obs);
+        }
+
+        function isAllChecked(checks) {
+            return CHECK_STEPS.every(step => !!checks[step.key]);
+        }
+
+        function checkedCount(checks) {
+            return CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0);
+        }
+
+        gamesData.forEach((game, index) => {
+            const gameId = 'game_' + index;
+            const savedObs = stateData[gameId]?.obs !== undefined ? stateData[gameId].obs : game.obs;
+            const checks = getChecks(gameId, savedObs);
+            const language = normalizeLanguage(stateData[gameId]?.language);
+            const allDone = isAllChecked(checks);
+            const progress = checkedCount(checks) / CHECK_STEPS.length;
+
+            const renderCheckButton = step => {
+                const on = checks[step.key];
+                return `
+                    <button class="action-btn check-btn ${on ? 'checked' : ''}"
+                            onclick="toggleCheck(this, '${gameId}', '${step.key}', event)"
+                            title="${step.title}">
+                        <span class="material-icons">${on ? 'check_circle' : 'radio_button_unchecked'}</span>
+                        <span class="check-label">${step.label}</span>
+                    </button>
+                `;
+            };
+
+            const languageOptionsHtml = LANGUAGE_OPTIONS.map(option => `
+                <option value="${option.value}" ${language === option.value ? 'selected' : ''}>${option.label}</option>
+            `).join('');
+
+            const hasLang = language !== 'nao' ? 'has-lang' : '';
+            const languageHtml = `
+                <label class="language-select-container ${hasLang}" title="Idioma">
+                    <span class="language-label">Idioma</span>
+                    <select class="language-select" onclick="event.stopPropagation()" onchange="saveLanguage('${gameId}', this.value, event)">
+                        ${languageOptionsHtml}
+                    </select>
+                </label>
+            `;
+            const controlsHtml = [
+                ...CHECK_STEPS.filter(step => step.key !== FINAL_CHECK_KEY).map(renderCheckButton),
+                languageHtml,
+                renderCheckButton(CHECK_STEPS.find(step => step.key === FINAL_CHECK_KEY))
+            ].join('');
+
+            const safeName = game.name.replace(/'/g, "\\'");
+
+            const html = `
+                <div class="game-item ${allDone ? 'listed' : ''}" id="${gameId}" style="--progress:${progress}">
+                    <div class="game-header" onclick="toggleGame(this, event)">
+                        <div class="game-title-container">
+                            <div class="checks-group">${controlsHtml}</div>
+                            <span class="game-name">${game.name}</span>
+                        </div>
+                        <button class="action-btn copy-btn" onclick="copyName('${safeName}', event)" title="Copiar Nome">
+                            <span class="material-icons">content_copy</span>
+                        </button>
+                    </div>
+                    <div class="observations">
+                        <textarea placeholder="Adicione suas observações aqui..." oninput="saveText('${gameId}', this.value, this)">${savedObs}</textarea>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+
+        updateSummary();
+        updateToggleAllButton();
+
+        // Toggle Expand/Collapse
+        function toggleGame(element, event) {
+            if (event.target.closest('.action-btn')) return;
+            const obsDiv = element.nextElementSibling;
+            obsDiv.classList.toggle('expanded');
+            updateToggleAllButton();
+        }
+
+        function toggleAllObservations(event) {
+            event.stopPropagation();
+            const observations = Array.from(document.querySelectorAll('.observations'));
+            const observationsWithText = observations.filter(hasObservationText);
+
+            if (observationsWithText.length === 0) {
+                observations.forEach(obs => obs.classList.remove('expanded'));
+                updateToggleAllButton();
+                showToast("Nenhum jogo com observações.");
+                return;
+            }
+
+            const shouldExpand = observationsWithText.some(obs => !obs.classList.contains('expanded'));
+
+            observations.forEach(obs => {
+                obs.classList.toggle('expanded', shouldExpand && hasObservationText(obs));
+            });
+            updateToggleAllButton();
+        }
+
+        function updateToggleAllButton() {
+            const button = document.getElementById('toggle-all-observations');
+            const observations = Array.from(document.querySelectorAll('.observations'));
+            const observationsWithText = observations.filter(hasObservationText);
+            const allExpanded = observationsWithText.length > 0 && observationsWithText.every(obs => obs.classList.contains('expanded'));
+
+            button.title = allExpanded ? 'Colapsar observações preenchidas' : 'Mostrar observações preenchidas';
+            button.querySelector('.material-icons').innerText = allExpanded ? 'unfold_less' : 'unfold_more';
+            button.querySelector('span:last-child').innerText = allExpanded ? 'Colapsar obs' : 'Mostrar obs';
+        }
+
+        function hasObservationText(obsDiv) {
+            const textarea = obsDiv.querySelector('textarea');
+            return !!textarea && textarea.value.trim() !== '';
+        }
+
+        function saveLanguage(gameId, value, event) {
+            event.stopPropagation();
+            const normalized = normalizeLanguage(value);
+            updateState(gameId, 'language', normalized);
+            // Reflect on the chip styling
+            const select = event.target;
+            const container = select.closest('.language-select-container');
+            if (container) container.classList.toggle('has-lang', normalized !== 'nao');
+            updateSummary();
+        }
+
+        // Toggle individual check
+        function toggleCheck(btn, gameId, stepKey, event) {
+            event.stopPropagation();
+
+            const gameItem = btn.closest('.game-item');
+            const textarea = gameItem.querySelector('textarea');
+            const nowOn = !btn.classList.contains('checked');
+
+            if (stepKey === FINAL_CHECK_KEY && nowOn && textarea.value.trim() !== '') {
+                const obsDiv = gameItem.querySelector('.observations');
+                obsDiv.classList.add('expanded');
+                textarea.focus();
+                showToast("Limpe as observações antes de marcar Obs revisada.");
+                return;
+            }
+
+            btn.classList.toggle('checked', nowOn);
+            btn.querySelector('.material-icons').innerText = nowOn ? 'check_circle' : 'radio_button_unchecked';
+
+            let state = JSON.parse(localStorage.getItem('gameState')) || {};
+            if (!state[gameId]) state[gameId] = {};
+            if (!state[gameId].checks) state[gameId].checks = {};
+            state[gameId].checks[stepKey] = nowOn;
+
+            const checks = state[gameId].checks;
+            const allDone = CHECK_STEPS.every(step => !!checks[step.key]);
+            const progress = CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0) / CHECK_STEPS.length;
+            state[gameId].listed = allDone;
+            gameItem.classList.toggle('listed', allDone);
+            gameItem.style.setProperty('--progress', progress);
+
+            localStorage.setItem('gameState', JSON.stringify(state));
+            updateSummary();
+        }
+
+        function copyName(name, event) {
+            event.stopPropagation();
+            navigator.clipboard.writeText(name).then(() => {
+                showToast("Copiado: " + name);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        function saveText(gameId, text, textarea) {
+            updateState(gameId, 'obs', text);
+            updateToggleAllButton();
+
+            if (text.trim() === '') return;
+
+            const gameItem = textarea.closest('.game-item');
+            const finalBtn = gameItem.querySelector(`.check-btn[onclick*="'${FINAL_CHECK_KEY}'"]`);
+            if (!finalBtn || !finalBtn.classList.contains('checked')) return;
+
+            finalBtn.classList.remove('checked');
+            finalBtn.querySelector('.material-icons').innerText = 'radio_button_unchecked';
+            gameItem.classList.remove('listed');
+
+            let state = JSON.parse(localStorage.getItem('gameState')) || {};
+            if (!state[gameId]) state[gameId] = {};
+            if (!state[gameId].checks) state[gameId].checks = {};
+            state[gameId].checks[FINAL_CHECK_KEY] = false;
+            state[gameId].listed = false;
+
+            const checks = state[gameId].checks;
+            const progress = CHECK_STEPS.reduce((n, step) => n + (checks[step.key] ? 1 : 0), 0) / CHECK_STEPS.length;
+            gameItem.style.setProperty('--progress', progress);
+
+            localStorage.setItem('gameState', JSON.stringify(state));
+            updateSummary();
+        }
+
+        function getCurrentState() {
+            return JSON.parse(localStorage.getItem('gameState')) || {};
+        }
+
+        function getCurrentChecks(gameId) {
+            const state = getCurrentState();
+            const entry = state[gameId] || {};
+            const textarea = document.querySelector(`#${gameId} textarea`);
+            const obs = entry.obs !== undefined ? entry.obs : (textarea ? textarea.value : '');
+            return normalizeChecks(entry.checks || {}, obs);
+        }
+
+        function updateSummary() {
+            const stats = CHECK_STEPS.map(step => ({ ...step, count: 0 }));
+            const languageStats = { legendado: 0, dublado: 0 };
+            const state = getCurrentState();
+            let completed = 0;
+
+            gamesData.forEach((game, index) => {
+                const gameId = 'game_' + index;
+                const checks = getCurrentChecks(gameId);
+                stats.forEach(stat => {
+                    if (checks[stat.key]) stat.count += 1;
+                });
+                const language = normalizeLanguage(state[gameId]?.language);
+                if (languageStats[language] !== undefined) languageStats[language] += 1;
+                if (isAllChecked(checks)) completed += 1;
+            });
+
+            const items = [
+                { label: 'Jogos na lista', count: gamesData.length, kind: 'primary' },
+                ...stats.map(stat => ({ label: stat.label, count: stat.count })),
+                { label: 'Legendado', count: languageStats.legendado },
+                { label: 'Dublado', count: languageStats.dublado },
+                { label: 'Concluídos', count: completed, kind: 'success' }
+            ];
+
+            document.getElementById('stats-summary').innerHTML = items.map(item => {
+                const cls = item.kind === 'primary' ? 'is-primary' : item.kind === 'success' ? 'is-success' : '';
+                return `
+                    <div class="stat-card ${cls}">
+                        <span class="stat-value">${item.count}</span>
+                        <span class="stat-label" title="${item.label}">${item.label}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Top progress bar
+            const total = gamesData.length;
+            const pct = total === 0 ? 0 : (completed / total) * 100;
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = `${completed} / ${total} concluídos`;
+        }
+
+        function updateState(gameId, key, value) {
+            let state = JSON.parse(localStorage.getItem('gameState')) || {};
+            if (!state[gameId]) state[gameId] = {};
+            state[gameId][key] = value;
+            localStorage.setItem('gameState', JSON.stringify(state));
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function exportState(event) {
+            event.stopPropagation();
+            const state = JSON.parse(localStorage.getItem('gameState')) || {};
+            const payload = { storageKey: 'gameState', exportedAt: new Date().toISOString(), state };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            a.href = url;
+            a.download = `organizador-de-jogos_${stamp}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Progresso exportado.");
+        }
+
+        function importState(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const incoming = (parsed && parsed.state && typeof parsed.state === 'object') ? parsed.state : parsed;
+                    if (!incoming || typeof incoming !== 'object') throw new Error('Formato inválido.');
+                    if (!confirm('Substituir o progresso atual pelo do arquivo importado?')) {
+                        event.target.value = '';
+                        return;
+                    }
+                    localStorage.setItem('gameState', JSON.stringify(incoming));
+                    showToast("Progresso importado. Recarregando...");
+                    setTimeout(() => location.reload(), 700);
+                } catch (err) {
+                    showToast("Arquivo inválido: " + err.message);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
