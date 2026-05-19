@@ -63,6 +63,10 @@
                         <span class="material-icons">unfold_more</span>
                         <span>Mostrar obs</span>
                     </button>
+                    <button class="action-btn toolbar-btn" onclick="exportLocalState(event)" title="Exportar progresso local como JSON">
+                        <span class="material-icons">download</span>
+                        <span>Exportar JSON</span>
+                    </button>
                     <span class="sync-status" id="sync-status" title="Estado da sincronização">Local</span>
                 </div>
             </div>
@@ -1406,6 +1410,19 @@
             if (icon) icon.innerText = hide ? 'visibility_off' : 'visibility';
             const label = btn.querySelector('span:last-child');
             if (label) label.innerText = hide ? 'Mostrar concluídos' : 'Ocultar concluídos';
+        }
+
+        function exportLocalState(event) {
+            if (event?.stopPropagation) event.stopPropagation();
+            const state = readPersistedState();
+            const json = JSON.stringify(state, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'biblioteca_curadoria.json';
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         function toggleListedFilter(event) {
