@@ -1315,6 +1315,19 @@
                     changed = true;
                 }
             });
+            // Limpa timestamps de seeds puras (sem atividade real do usuário) para que
+            // dados remotos mais antigos possam sobrescrever entradas recém-semeadas.
+            Object.keys(state).forEach(id => {
+                const entry = state[id];
+                if (!entry?.libSeeded || !entry.updatedAt) return;
+                const checks = entry.checks || {};
+                if (!checks.onHd && !checks.tested && !checks.obsReviewed &&
+                    (!entry.language || entry.language === 'nao') &&
+                    (!entry.obs || !String(entry.obs).trim())) {
+                    entry.updatedAt = '';
+                    changed = true;
+                }
+            });
             if (changed) writePersistedState(state);
             return state;
         }
@@ -1342,7 +1355,7 @@
                 state[gameId].libSeeded = true;
                 state[gameId].checks = normalizeChecks(state[gameId].checks, state[gameId].obs || '');
                 state[gameId].listed = isAllChecked(state[gameId].checks);
-                state[gameId].updatedAt = nowIso();
+                // Sem timestamp: remoto com qualquer data real pode sobrescrever seeds
                 changed = true;
             });
             if (changed) writePersistedState(state);
