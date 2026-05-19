@@ -1603,6 +1603,9 @@
             });
         });
 
+        let summaryItemsLayout = null;
+        let summaryValueNodes = null;
+
         initFilterControls();
         updateHideListedButton();
         updateSummary();
@@ -1736,9 +1739,6 @@
             const obs = entry.obs !== undefined ? entry.obs : (textarea ? textarea.value : '');
             return normalizeChecks(entry.checks || {}, obs);
         }
-
-        let summaryItemsLayout = null;
-        let summaryValueNodes = null;
 
         function buildSummaryLayout() {
             const stats = CHECK_STEPS.map(step => ({ key: step.key, label: step.label }));
