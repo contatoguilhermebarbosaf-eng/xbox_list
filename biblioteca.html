@@ -7,6 +7,11 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        .check-btn.tested-ok .material-icons { color: #228B22; }
+        .check-btn.tested-broken .material-icons { color: #CC0000; }
+        .check-btn.tested-broken { border-color: rgba(204,0,0,0.35); }
+    </style>
 </head>
 <body>
 
@@ -1274,11 +1279,12 @@
 
         function normalizeChecks(checks, obs = '') {
             const normalized = {
-                downloading: !!(checks.downloading ?? checks.downloaded),
-                onPc:        !!(checks.onPc ?? checks.installed),
-                onHd:        !!checks.onHd,
-                tested:      !!checks.tested,
-                obsReviewed: !!(checks.obsReviewed ?? checks.finished)
+                downloading:  !!(checks.downloading ?? checks.downloaded),
+                onPc:         !!(checks.onPc ?? checks.installed),
+                onHd:         !!checks.onHd,
+                tested:       !!checks.tested,
+                tested_broken: !!checks.tested_broken,
+                obsReviewed:  !!(checks.obsReviewed ?? checks.finished)
             };
             if (obs.trim() !== '') normalized.obsReviewed = false;
             return normalized;
@@ -1539,6 +1545,21 @@
             const progress = checkedCount(checks) / CHECK_STEPS.length;
 
             const renderCheckButton = step => {
+                if (step.key === 'tested') {
+                    const ok = checks.tested && !checks.tested_broken;
+                    const broken = checks.tested && checks.tested_broken;
+                    const cls = ok ? 'checked tested-ok' : broken ? 'checked tested-broken' : '';
+                    const icon = ok ? 'check_circle' : broken ? 'cancel' : 'radio_button_unchecked';
+                    const titleAttr = ok ? 'Testado: OK' : broken ? 'Testado: Quebrado' : 'Não testado';
+                    return `
+                        <button class="action-btn check-btn ${cls}"
+                                onclick="toggleCheck(this, '${gameId}', '${step.key}', event)"
+                                title="${titleAttr}">
+                            <span class="material-icons">${icon}</span>
+                            <span class="check-label">${step.label}</span>
+                        </button>
+                    `;
+                }
                 const on = checks[step.key];
                 return `
                     <button class="action-btn check-btn ${on ? 'checked' : ''}"
@@ -1665,21 +1686,52 @@
             event.stopPropagation();
             const gameItem = btn.closest('.game-item');
             const textarea = gameItem.querySelector('textarea');
-            const nowOn = !btn.classList.contains('checked');
-            if (stepKey === FINAL_CHECK_KEY && nowOn && textarea.value.trim() !== '') {
-                const obsDiv = gameItem.querySelector('.observations');
-                obsDiv.classList.add('expanded');
-                textarea.focus();
-                showToast("Limpe as observações antes de marcar Obs revisada.");
-                return;
-            }
-            btn.classList.toggle('checked', nowOn);
-            btn.querySelector('.material-icons').innerText = nowOn ? 'check_circle' : 'radio_button_unchecked';
 
             let state = readPersistedState();
             if (!state[gameId]) state[gameId] = {};
             if (!state[gameId].checks) state[gameId].checks = {};
-            state[gameId].checks[stepKey] = nowOn;
+
+            if (stepKey === 'tested') {
+                const curTested = !!state[gameId].checks.tested;
+                const curBroken = !!state[gameId].checks.tested_broken;
+                // ciclo: none → ok → broken → none
+                let newTested, newBroken;
+                if (!curTested && !curBroken) {
+                    newTested = true;  newBroken = false; // none → ok
+                } else if (curTested && !curBroken) {
+                    newTested = true;  newBroken = true;  // ok → broken
+                } else {
+                    newTested = false; newBroken = false; // broken → none
+                }
+                state[gameId].checks.tested = newTested;
+                state[gameId].checks.tested_broken = newBroken;
+                // atualiza visual do botão
+                btn.classList.remove('checked', 'tested-ok', 'tested-broken');
+                if (newTested && !newBroken) {
+                    btn.classList.add('checked', 'tested-ok');
+                    btn.querySelector('.material-icons').innerText = 'check_circle';
+                    btn.title = 'Testado: OK';
+                } else if (newTested && newBroken) {
+                    btn.classList.add('checked', 'tested-broken');
+                    btn.querySelector('.material-icons').innerText = 'cancel';
+                    btn.title = 'Testado: Quebrado';
+                } else {
+                    btn.querySelector('.material-icons').innerText = 'radio_button_unchecked';
+                    btn.title = 'Não testado';
+                }
+            } else {
+                const nowOn = !btn.classList.contains('checked');
+                if (stepKey === FINAL_CHECK_KEY && nowOn && textarea.value.trim() !== '') {
+                    const obsDiv = gameItem.querySelector('.observations');
+                    obsDiv.classList.add('expanded');
+                    textarea.focus();
+                    showToast("Limpe as observações antes de marcar Obs revisada.");
+                    return;
+                }
+                btn.classList.toggle('checked', nowOn);
+                btn.querySelector('.material-icons').innerText = nowOn ? 'check_circle' : 'radio_button_unchecked';
+                state[gameId].checks[stepKey] = nowOn;
+            }
             state[gameId] = normalizeEntry(state[gameId]);
             state[gameId].updatedAt = nowIso();
             const checks = state[gameId].checks;
@@ -1745,6 +1797,7 @@
             const items = [
                 { label: 'Jogos na lista', kind: 'primary' },
                 ...stats.map(stat => ({ label: stat.label, statKey: stat.key })),
+                { label: 'Quebrados', brokenKey: true },
                 { label: 'Legendado', langKey: 'legendado' },
                 { label: 'Dublado', langKey: 'dublado' },
                 { label: 'Concluídos', kind: 'success', completed: true }
@@ -1771,6 +1824,7 @@
             CHECK_STEPS.forEach(step => { counts[step.key] = 0; });
             const languageStats = { legendado: 0, dublado: 0 };
             let completed = 0;
+            let broken = 0;
 
             for (let i = 0; i < gamesData.length; i++) {
                 const gameId = gameIdFor(gamesData[i]);
@@ -1780,6 +1834,7 @@
                 for (let j = 0; j < CHECK_STEPS.length; j++) {
                     if (checks[CHECK_STEPS[j].key]) counts[CHECK_STEPS[j].key] += 1;
                 }
+                if (checks.tested && checks.tested_broken) broken += 1;
                 const language = normalizeLanguage(entry.language);
                 if (languageStats[language] !== undefined) languageStats[language] += 1;
                 if (isAllChecked(checks)) completed += 1;
@@ -1790,6 +1845,7 @@
                 let value;
                 if (item.kind === 'primary') value = gamesData.length;
                 else if (item.completed) value = completed;
+                else if (item.brokenKey) value = broken;
                 else if (item.statKey) value = counts[item.statKey];
                 else if (item.langKey) value = languageStats[item.langKey];
                 else value = 0;
@@ -1947,6 +2003,25 @@
             CHECK_STEPS.forEach(step => {
                 const btn = gameItem.querySelector(`.check-btn[onclick*="'${step.key}'"]`);
                 if (!btn) return;
+                if (step.key === 'tested') {
+                    const ok = checks.tested && !checks.tested_broken;
+                    const broken = checks.tested && checks.tested_broken;
+                    btn.classList.remove('checked', 'tested-ok', 'tested-broken');
+                    const icon = btn.querySelector('.material-icons');
+                    if (ok) {
+                        btn.classList.add('checked', 'tested-ok');
+                        if (icon) icon.innerText = 'check_circle';
+                        btn.title = 'Testado: OK';
+                    } else if (broken) {
+                        btn.classList.add('checked', 'tested-broken');
+                        if (icon) icon.innerText = 'cancel';
+                        btn.title = 'Testado: Quebrado';
+                    } else {
+                        if (icon) icon.innerText = 'radio_button_unchecked';
+                        btn.title = 'Não testado';
+                    }
+                    return;
+                }
                 const on = !!checks[step.key];
                 btn.classList.toggle('checked', on);
                 const icon = btn.querySelector('.material-icons');
